@@ -37,5 +37,6 @@ public class PathfindingAvoidanceMod : Mod
             settings.dirtyCost, 0, 100, tooltip : "PathfindingAvoidance.DirtyCostTooltip".Translate());
         listing.End();
         base.DoSettingsWindowContents(rect);
+        PathCostSource.RegenerateAll();
     }
 }

@@ -19,8 +19,13 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
 
     public NativeArray<ushort> Cost => cost;
 
+    public bool triggerRegenerate = false;
+
+    private static List< PathCostSource > allSources = new List< PathCostSource >();
+
     public PathCostSource(Map map)
     {
+        allSources.Add( this );
         this.map = map;
         int numGridCells = map.cellIndices.NumGridCells;
         cost = new NativeArray<ushort>(numGridCells, Allocator.Persistent);
@@ -29,6 +34,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     public void Dispose()
     {
         cost.Dispose();
+        allSources.Remove( this );
     }
 
     public void ComputeAll(IEnumerable<PathRequest> _)
@@ -43,8 +49,14 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         }
     }
 
-    public bool UpdateIncrementally(IEnumerable<PathRequest> _, List<IntVec3> cellDeltas)
+    public bool UpdateIncrementally(IEnumerable<PathRequest> requests, List<IntVec3> cellDeltas)
     {
+        if( triggerRegenerate )
+        {
+            triggerRegenerate = false;
+            ComputeAll( requests );
+            return true;
+        }
         CellIndices cellIndices = map.cellIndices;
         TerrainGrid terrainGrid = map.terrainGrid;
         foreach( IntVec3 cellDelta in cellDeltas )
@@ -65,5 +77,11 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         if( terrainDef.generatedFilth != null )
             cost += (ushort) PathfindingAvoidanceMod.settings.dirtyCost;
         return cost;
+    }
+
+    public static void RegenerateAll()
+    {
+        foreach( PathCostSource source in allSources )
+            source.triggerRegenerate = true;
     }
 }
