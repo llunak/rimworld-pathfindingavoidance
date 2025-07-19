@@ -131,7 +131,44 @@ public static class PathFinder_Patch
 
     private static bool ShouldApplyCost( PathRequest request )
     {
-        return request.pawn.gender == Gender.Female; // TODO
+        // TODO Does this need optimizing?
+        // TODO Save last pawn/tick and cache result (this gets called several times in a row).
+        // This doesn't actually seem to be called that often.
+        Pawn pawn = request.pawn;
+        if( pawn.IsAnimal )
+            return false;
+        if( pawn.IsPlayerControlled )
+        {
+            // Player-controlled pawns (colonists, mechs) generally follow the rules,
+            // with some exceptions.
+            if( pawn.Drafted || pawn.Crawling )
+                return false;
+            // Some things inspired by GatheringsUtility.ShouldGuestKeepAttendingGathering().
+            if( pawn.health.hediffSet.BleedRateTotal > 0.1f || pawn.health.hediffSet.InLabor())
+                return false;
+            // Carrying another downed pawn (but not a baby).
+            if( pawn.carryTracker != null && pawn.carryTracker.CarriedThing is Pawn otherPawn
+                && otherPawn.Downed && !otherPawn.DevelopmentalStage.Baby())
+            {
+                    return false;
+            }
+            if( pawn.InAggroMentalState )
+                return false;
+            return true;
+        }
+        // Raiders never follow rules.
+        Faction mapFaction = request.map.ParentFaction ?? null;
+        if( pawn.Faction != mapFaction && pawn.Faction != null && pawn.Faction.HostileTo( mapFaction ))
+            return false;
+        // Neutrals follow rules if not aggro-ed or in fight.
+        if( pawn.InAggroMentalState
+            || pawn.mindState?.meleeThreat != null
+            || pawn.mindState?.enemyTarget != null
+            /*|| ( pawn.mindState?.WasRecentlyCombatantTicks( 10 ) ?? false ) does not work unfortunately*/)
+        {
+            return false;
+        }
+        return true;
     }
 }
 
