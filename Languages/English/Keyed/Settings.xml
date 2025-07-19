@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <PathfindingAvoidance.ModName>Pathfinding Avoidance</PathfindingAvoidance.ModName>
+  <PathfindingAvoidance.DirtyCost>Extra cost for filth-producing tiles: {0}</PathfindingAvoidance.DirtyCost>
+  <PathfindingAvoidance.DirtyCostTooltip>Additional perceived cost for using terrain that produces filth. The higher the number the more friendly pawns will try to avoid such terrain.</PathfindingAvoidance.DirtyCostTooltip>
+
+</LanguageData>

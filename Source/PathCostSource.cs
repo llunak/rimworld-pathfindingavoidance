@@ -63,7 +63,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     {
         ushort cost = 0;
         if( terrainDef.generatedFilth != null )
-            cost += Settings.dirtyCost;
+            cost += (ushort) PathfindingAvoidanceMod.settings.dirtyCost;
         return cost;
     }
 }
