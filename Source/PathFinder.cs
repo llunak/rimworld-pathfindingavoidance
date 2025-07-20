@@ -234,7 +234,10 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
         // In IsWrapper case, use LastUpdateId to detect when PathCostSource.UpdateIncrementally()
         // updates but returns false (so only grid data changes in the array but no caching is disposed).
         // I don't know how to detect that the original customizer has updated in such a way,
-        // but vanilla ones do not update, so that should be safe.
+        // but vanilla ones do not update, so that should be safe. Since this is not called _that_ often,
+        // maybe using UnsafeUtility.MemCmp() to detect a change could do, although it might be better
+        // to have some interface that provides update id (since any customizer needing this should
+        // be only another mod).
         if( IsWrapper && sourceLastUpdateId != source.LastUpdateId )
             MergeWrapperGrid();
         return grid;
