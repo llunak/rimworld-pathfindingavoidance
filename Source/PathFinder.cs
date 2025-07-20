@@ -22,7 +22,8 @@ namespace PathfindingAvoidance;
 //     with PathFinder.MapGridRequest used as a key, and the customizer field seems to be the only
 //     reasonable field there for a mod to make two keys different based on custom criteria.
 
-using CustomizerMap = System.Collections.Generic.Dictionary< ( PathFinderMapData, PathRequest.IPathGridCustomizer ), Customizer >;
+using SourceMap = System.Collections.Generic.Dictionary< ( PathType, PathFinderMapData ), PathCostSource >;
+using CustomizerMap = System.Collections.Generic.Dictionary< ( PathType, PathFinderMapData, PathRequest.IPathGridCustomizer ), Customizer >;
 
 [HarmonyPatch(typeof(PathFinderMapData))]
 public static class PathFinderMapData_Patch
@@ -33,9 +34,15 @@ public static class PathFinderMapData_Patch
     [HarmonyPatch(new Type[] { typeof( Map ) })]
     public static void Constructor( PathFinderMapData __instance, Map map )
     {
-        PathCostSource source = new PathCostSource( map );
-        Customizer.AddSource( __instance, source );
-        __instance.RegisterSource( source );
+        foreach( PathType pathType in Enum.GetValues( typeof( PathType )))
+        {
+            if( pathType.IsEnabled())
+            {
+                PathCostSource source = new PathCostSource( map, pathType );
+                Customizer.AddSource( pathType, __instance, source );
+                __instance.RegisterSource( source );
+            }
+        }
     }
 
     [HarmonyPrefix]
@@ -124,51 +131,52 @@ public static class PathFinder_Patch
     public static PathFinder.MapGridRequest Transpiler_Hook( PathFinder.MapGridRequest gridRequest, PathRequest pathRequest, PathFinder pathFinder )
     {
         Pawn pawn = pathRequest.pawn;
-        if( ShouldApplyCost( pathRequest ))
-            gridRequest.customizer = Customizer.Get( pathFinder.mapData, gridRequest.customizer );
+        PathType pathType = GetPathType( pathRequest );
+        if( pathType != PathType.None )
+            gridRequest.customizer = Customizer.Get( pathType, pathFinder.mapData, gridRequest.customizer );
         return gridRequest;
     }
 
-    private static bool ShouldApplyCost( PathRequest request )
+    private static PathType GetPathType( PathRequest request )
     {
         // TODO Does this need optimizing?
         // TODO Save last pawn/tick and cache result (this gets called several times in a row).
         // This doesn't actually seem to be called that often.
         Pawn pawn = request.pawn;
-        if( pawn.IsAnimal )
-            return false;
         if( pawn.IsPlayerControlled )
         {
             // Player-controlled pawns (colonists, mechs) generally follow the rules,
             // with some exceptions.
-            if( pawn.Drafted || pawn.Crawling )
-                return false;
+            if( pawn.IsAnimal || pawn.Drafted || pawn.Crawling )
+                return PathType.None;
             // Some things inspired by GatheringsUtility.ShouldGuestKeepAttendingGathering().
             if( pawn.health.hediffSet.BleedRateTotal > 0.3f || pawn.health.hediffSet.InLabor())
-                return false;
+                return PathType.None;
             // Carrying another downed pawn (but not a baby).
             if( pawn.carryTracker != null && pawn.carryTracker.CarriedThing is Pawn otherPawn
                 && otherPawn.Downed && !otherPawn.DevelopmentalStage.Baby())
             {
-                    return false;
+                    return PathType.None;
             }
             if( pawn.InMentalState )
-                return false;
-            return true;
+                return PathType.None;
+            return PathType.Colony;
         }
         // Raiders never follow rules.
         Faction mapFaction = request.map.ParentFaction ?? null;
         if( pawn.Faction != mapFaction && pawn.Faction != null && pawn.Faction.HostileTo( mapFaction ))
-            return false;
+            return PathType.None;
         // Neutrals follow rules if not in mental state or in fight.
         if( pawn.InMentalState
             || pawn.mindState?.meleeThreat != null
             || pawn.mindState?.enemyTarget != null
             /*|| ( pawn.mindState?.WasRecentlyCombatantTicks( 10 ) ?? false ) does not work unfortunately*/)
         {
-            return false;
+            return PathType.None;
         }
-        return true;
+        if( pawn.IsAnimal && pawn.Faction == null )
+            return PathType.None; // Wild animals ignore rules (animals from friendly factions obey them).
+        return PathType.Friendly;
     }
 }
 
@@ -187,30 +195,32 @@ public static class PathFinder2_Patch
 // The class that provides grid data to pathfinding. Needs to wrap the previous customizer if present.
 public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
 {
+    private readonly PathType pathType;
+    private readonly PathRequest.IPathGridCustomizer original = null;
+    private readonly PathCostSource source = null;
     private NativeArray<ushort> grid;
-    private PathRequest.IPathGridCustomizer original = null;
-    private PathCostSource source = null;
     private int sourceLastUpdateId = 0;
 
     private static CustomizerMap customizerMap = new CustomizerMap();
-    private static Dictionary< PathFinderMapData, PathCostSource > sourceMap = new Dictionary< PathFinderMapData, PathCostSource >();
+    private static SourceMap sourceMap = new SourceMap();
 
     private bool IsWrapper => original != null;
 
-    public static Customizer Get( PathFinderMapData mapData, PathRequest.IPathGridCustomizer original )
+    public static Customizer Get( PathType pathType, PathFinderMapData mapData, PathRequest.IPathGridCustomizer original )
     {
         Customizer customizer;
-        if( customizerMap.TryGetValue( ( mapData, original ), out customizer ))
+        if( customizerMap.TryGetValue( ( pathType, mapData, original ), out customizer ))
             return customizer;
-        customizer = new Customizer( mapData, original );
-        customizerMap[ ( mapData, original ) ] = customizer;
+        customizer = new Customizer( pathType, mapData, original );
+        customizerMap[ ( pathType, mapData, original ) ] = customizer;
         return customizer;
     }
 
-    public Customizer(PathFinderMapData mapData, PathRequest.IPathGridCustomizer original)
+    public Customizer(PathType pathType, PathFinderMapData mapData, PathRequest.IPathGridCustomizer original)
     {
+        this.pathType = pathType;
         this.original = original;
-        source = sourceMap[ mapData ];
+        source = sourceMap[ ( pathType, mapData ) ];
         if( !IsWrapper )
         {
             // Simple case, we do not need to chain an original customizer, so just use PathCostSource data.
@@ -258,16 +268,16 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
             grid.Dispose();
     }
 
-    public static void AddSource( PathFinderMapData mapData, PathCostSource source )
+    public static void AddSource( PathType pathType, PathFinderMapData mapData, PathCostSource source )
     {
-        sourceMap[ mapData ] = source;
+        sourceMap[ ( pathType, mapData ) ] = source;
     }
 
     public static void ClearMap( PathFinderMapData mapData )
     {
         foreach( var key in customizerMap.Keys.ToArray())
         {
-            if( key.Item1 == mapData )
+            if( key.Item2 == mapData )
             {
                 customizerMap[ key ].Dispose();
                 customizerMap.Remove( key );
@@ -278,6 +288,10 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
     public static void RemoveMap( PathFinderMapData mapData )
     {
         ClearMap( mapData );
-        sourceMap.Remove( mapData );
+        foreach( var key in sourceMap.Keys.ToArray())
+        {
+            if( key.Item2 == mapData )
+                sourceMap.Remove( key ); // No Dispose here(), PathFinderMapData does that.
+        }
     }
 }

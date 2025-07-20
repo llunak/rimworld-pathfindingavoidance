@@ -14,6 +14,7 @@ namespace PathfindingAvoidance;
 public class PathCostSource : IPathFinderDataSource, IDisposable
 {
     private readonly Map map;
+    private readonly PathType pathType;
 
     private NativeArray<ushort> cost;
     private int lastUpdateId = 0;
@@ -25,10 +26,11 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
 
     private static List< PathCostSource > allSources = new List< PathCostSource >();
 
-    public PathCostSource(Map map)
+    public PathCostSource(Map map, PathType pathType)
     {
-        allSources.Add( this );
         this.map = map;
+        this.pathType = pathType;
+        allSources.Add( this );
         int numGridCells = map.cellIndices.NumGridCells;
         cost = new NativeArray<ushort>(numGridCells, Allocator.Persistent);
     }
@@ -43,19 +45,34 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     {
         cost.Clear();
         triggerRegenerate = false;
+        // Filth-avoidance.
         TerrainGrid terrainGrid = map.terrainGrid;
         for( int i = 0; i < map.cellIndices.NumGridCells; ++i )
         {
             TerrainDef terrainDef = terrainGrid.TerrainAt( i );
             if( terrainDef != null )
-                cost[i] = CalculateTerrainCellCost( terrainDef );
+                cost[i] += CalculateTerrainCellCost( terrainDef );
         }
+        // Door priority.
         CellIndices cellIndices = map.cellIndices;
         foreach( Building_Door door in map.listerBuildings.AllBuildingsColonistOfClass< Building_Door >())
         {
             ushort doorCost = GetDoorCost( door );
             if( doorCost > 0 )
                 cost[ cellIndices.CellToIndex( door.Position ) ] += doorCost;
+        }
+        // Make friendly visits avoid walking through rooms.
+        if( pathType == PathType.Friendly )
+        {
+            foreach( Room room in map.regionGrid.AllRooms )
+            {
+                ushort roomCost = GetRoomCost( room );
+                if( roomCost > 0 )
+                {
+                    foreach( IntVec3 pos in room.Cells )
+                        cost[ cellIndices.CellToIndex( pos ) ] += roomCost;
+                }
+            }
         }
         ++lastUpdateId;
     }
@@ -85,12 +102,24 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             if( buildingArray[ num ] is Building_Door door )
                 cost[ num ] += GetDoorCost( door );
         }
+        if( pathType == PathType.Friendly )
+        {
+            foreach( IntVec3 cellDelta in cellDeltas )
+            {
+                Room room = cellDelta.GetRoom( map );
+                if( room == null )
+                    continue;
+                ushort roomCost = GetRoomCost( room );
+                if( roomCost > 0 )
+                    cost[ cellIndices.CellToIndex( cellDelta ) ] += roomCost;
+            }
+        }
         if( cellDeltas.Count != 0 )
             ++lastUpdateId;
         return false;
     }
 
-    private ushort CalculateTerrainCellCost( TerrainDef terrainDef )
+    private static ushort CalculateTerrainCellCost( TerrainDef terrainDef )
     {
         ushort cost = 0;
         if( terrainDef.generatedFilth != null )
@@ -98,7 +127,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         return cost;
     }
 
-    private ushort GetDoorCost( Building_Door door )
+    private static ushort GetDoorCost( Building_Door door )
     {
         return DoorPriorityInfo.Get( door ).DoorPriority switch
         {
@@ -107,6 +136,15 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             DoorPriority.Emergency => (ushort) PathfindingAvoidanceMod.settings.emergencyDoorCost,
             _ => throw new ArgumentOutOfRangeException()
         };
+    }
+
+    private static ushort GetRoomCost( Room room )
+    {
+        if( room.IsHuge || room.IsDoorway )
+            return 0;
+        if( room.PsychologicallyOutdoors )
+            return (ushort) PathfindingAvoidanceMod.settings.visitingCaravanOutdoorsRoomCost;
+        return (ushort) PathfindingAvoidanceMod.settings.visitingCaravanIndoorRoomCost;
     }
 
     public static void RegenerateAll()
