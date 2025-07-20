@@ -144,7 +144,7 @@ public static class PathFinder_Patch
             if( pawn.Drafted || pawn.Crawling )
                 return false;
             // Some things inspired by GatheringsUtility.ShouldGuestKeepAttendingGathering().
-            if( pawn.health.hediffSet.BleedRateTotal > 0.1f || pawn.health.hediffSet.InLabor())
+            if( pawn.health.hediffSet.BleedRateTotal > 0.3f || pawn.health.hediffSet.InLabor())
                 return false;
             // Carrying another downed pawn (but not a baby).
             if( pawn.carryTracker != null && pawn.carryTracker.CarriedThing is Pawn otherPawn
