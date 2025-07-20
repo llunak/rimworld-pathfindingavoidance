@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <PathfindingAvoidance.DoorPriorityLabelNormal>Normal Priority</PathfindingAvoidance.DoorPriorityLabelNormal>
+  <PathfindingAvoidance.DoorPriorityLabelSide>Side Door</PathfindingAvoidance.DoorPriorityLabelSide>
+  <PathfindingAvoidance.DoorPriorityLabelEmergency>Emergency Only</PathfindingAvoidance.DoorPriorityLabelEmergency>
+  <PathfindingAvoidance.DoorPriorityDesc>Allows setting a lower priority for the door. Pawns will try to avoid using the door.</PathfindingAvoidance.DoorPriorityDesc>
+
+</LanguageData>

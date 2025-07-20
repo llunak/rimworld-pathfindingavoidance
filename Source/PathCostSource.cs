@@ -48,7 +48,14 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         {
             TerrainDef terrainDef = terrainGrid.TerrainAt( i );
             if( terrainDef != null )
-                cost[i] = CalculateCellCost( terrainDef );
+                cost[i] = CalculateTerrainCellCost( terrainDef );
+        }
+        CellIndices cellIndices = map.cellIndices;
+        foreach( Building_Door door in map.listerBuildings.AllBuildingsColonistOfClass< Building_Door >())
+        {
+            ushort doorCost = GetDoorCost( door );
+            if( doorCost > 0 )
+                cost[ cellIndices.CellToIndex( door.Position ) ] += doorCost;
         }
         ++lastUpdateId;
     }
@@ -67,21 +74,39 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             int num = cellIndices.CellToIndex( cellDelta );
             TerrainDef terrainDef = terrainGrid.TerrainAt( num );
             if (terrainDef != null)
-                cost[ num ] = CalculateCellCost( terrainDef );
+                cost[ num ] = CalculateTerrainCellCost( terrainDef );
             else
                 cost[ num ] = 0;
+        }
+        Building[] buildingArray = map.edificeGrid.InnerArray;
+        foreach( IntVec3 cellDelta in cellDeltas )
+        {
+            int num = cellIndices.CellToIndex( cellDelta );
+            if( buildingArray[ num ] is Building_Door door )
+                cost[ num ] += GetDoorCost( door );
         }
         if( cellDeltas.Count != 0 )
             ++lastUpdateId;
         return false;
     }
 
-    private ushort CalculateCellCost( TerrainDef terrainDef )
+    private ushort CalculateTerrainCellCost( TerrainDef terrainDef )
     {
         ushort cost = 0;
         if( terrainDef.generatedFilth != null )
             cost += (ushort) PathfindingAvoidanceMod.settings.dirtyCost;
         return cost;
+    }
+
+    private ushort GetDoorCost( Building_Door door )
+    {
+        return DoorPriorityInfo.Get( door ).DoorPriority switch
+        {
+            DoorPriority.Normal => 0,
+            DoorPriority.Side => (ushort) PathfindingAvoidanceMod.settings.sideDoorCost,
+            DoorPriority.Emergency => (ushort) PathfindingAvoidanceMod.settings.emergencyDoorCost,
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     public static void RegenerateAll()
