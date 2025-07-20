@@ -42,6 +42,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     public void ComputeAll(IEnumerable<PathRequest> _)
     {
         cost.Clear();
+        triggerRegenerate = false;
         TerrainGrid terrainGrid = map.terrainGrid;
         for( int i = 0; i < map.cellIndices.NumGridCells; ++i )
         {
@@ -56,7 +57,6 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     {
         if( triggerRegenerate )
         {
-            triggerRegenerate = false;
             ComputeAll( requests );
             return true;
         }
