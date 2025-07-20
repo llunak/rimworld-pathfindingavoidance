@@ -91,6 +91,7 @@ public static class Building_Door_Patch
         action.defaultDesc = "PathfindingAvoidance.DoorPriorityDesc".Translate();
         action.icon = ContentFinder<Texture2D>.Get("UI/Designators/PathAvoidance_DoorPriority");
         action.hotKey = KeyBindingDefOf.Misc12; // 'P' by default
+        action.activateSound = SoundDefOf.Checkbox_TurnedOn;
         action.action = () => info.SwitchNextPriority();
         yield return action;
     }
