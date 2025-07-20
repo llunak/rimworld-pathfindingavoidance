@@ -152,7 +152,7 @@ public static class PathFinder_Patch
             {
                     return false;
             }
-            if( pawn.InAggroMentalState )
+            if( pawn.InMentalState )
                 return false;
             return true;
         }
@@ -160,8 +160,8 @@ public static class PathFinder_Patch
         Faction mapFaction = request.map.ParentFaction ?? null;
         if( pawn.Faction != mapFaction && pawn.Faction != null && pawn.Faction.HostileTo( mapFaction ))
             return false;
-        // Neutrals follow rules if not aggro-ed or in fight.
-        if( pawn.InAggroMentalState
+        // Neutrals follow rules if not in mental state or in fight.
+        if( pawn.InMentalState
             || pawn.mindState?.meleeThreat != null
             || pawn.mindState?.enemyTarget != null
             /*|| ( pawn.mindState?.WasRecentlyCombatantTicks( 10 ) ?? false ) does not work unfortunately*/)
