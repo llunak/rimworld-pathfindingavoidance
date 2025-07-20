@@ -17,5 +17,23 @@
     <loadAfter>
         <li>brrainz.harmony</li>
     </loadAfter>
-    <description></description>
+    <description>
+Make pawns try to avoid certain areas, such as filth-generating terrain or configured doors.
+
+In vanilla game, pawns do not mind walking through a freezer, other pawn's bedroom, or cutting a corner
+of a paved path. This mod implements the following features:
+
+- Filth avoidance. All terrain that generates filth will be perceived as more costly to walk and pawns
+will try to avoid them if a clean path is nearby.
+- Door avoidance. Each door can have a priority set. Pawns will try to avoid using 'Side Door' doors,
+and will use 'Emergency Door' doors only if it is the only way or the alternative is very costly.
+
+(These match the non-performance features from the 'Clean Pathfinding 2' mod.)
+
+These rules apply only to non-animal colonists or non-hostile visitors. Certain exceptions apply,
+such as being drafted, bleeding severely or carrying another pawn.
+
+GitHub: https://github.com/llunak/rimworld-pathfindingavoidance
+
+</description>
 </ModMetaData>
