@@ -59,7 +59,8 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         {
             ushort doorCost = GetDoorCost( door );
             if( doorCost > 0 )
-                cost[ cellIndices.CellToIndex( door.Position ) ] += doorCost;
+                foreach( IntVec3 pos in door.OccupiedRect().Cells )
+                    cost[ cellIndices.CellToIndex( pos ) ] += doorCost;
         }
         // Make friendly visits avoid walking through rooms.
         if( pathType == PathType.Friendly )
