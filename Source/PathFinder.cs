@@ -189,6 +189,8 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
 {
     private NativeArray<ushort> grid;
     private PathRequest.IPathGridCustomizer original = null;
+    private PathCostSource source = null;
+    private int sourceLastUpdateId = 0;
 
     private static CustomizerMap customizerMap = new CustomizerMap();
     private static Dictionary< PathFinderMapData, PathCostSource > sourceMap = new Dictionary< PathFinderMapData, PathCostSource >();
@@ -208,6 +210,7 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
     public Customizer(PathFinderMapData mapData, PathRequest.IPathGridCustomizer original)
     {
         this.original = original;
+        source = sourceMap[ mapData ];
         if( !IsWrapper )
         {
             // Simple case, we do not need to chain an original customizer, so just use PathCostSource data.
@@ -215,22 +218,35 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
             // is cheap and shares the data pointed to. This also means we do not need the update
             // anything if the grid in PathCostSource changes, because it's still the same buffer.
             // PathCostSource is only disposed when map is removed, so lifetime is also fine.
-            grid = sourceMap[ mapData ].Cost;
+            grid = source.Cost;
         }
         else
         {
             // If there is a customizer to wrap, compute a new grid from both.
             grid = new NativeArray<ushort>(mapData.map.cellIndices.NumGridCells, Allocator.Persistent);
-            NativeArray<ushort> originalGrid = original.GetOffsetGrid();
-            NativeArray<ushort> sourceGrid = sourceMap[ mapData ].Cost;
-            for( int i = 0; i < mapData.map.cellIndices.NumGridCells; ++i )
-                grid[ i ] = (ushort)Math.Clamp( sourceGrid[ i ] + originalGrid[ i ], 0, 65535);
+            MergeWrapperGrid();
         }
     }
 
     public NativeArray<ushort> GetOffsetGrid()
     {
+        // No need to update in !IsWrapper case (see above).
+        // In IsWrapper case, use LastUpdateId to detect when PathCostSource.UpdateIncrementally()
+        // updates but returns false (so only grid data changes in the array but no caching is disposed).
+        // I don't know how to detect that the original customizer has updated in such a way,
+        // but vanilla ones do not update, so that should be safe.
+        if( IsWrapper && sourceLastUpdateId != source.LastUpdateId )
+            MergeWrapperGrid();
         return grid;
+    }
+
+    private void MergeWrapperGrid()
+    {
+        NativeArray<ushort> originalGrid = original.GetOffsetGrid();
+        NativeArray<ushort> sourceGrid = source.Cost;
+        for( int i = 0; i < grid.Count(); ++i )
+            grid[ i ] = (ushort)Math.Clamp( sourceGrid[ i ] + originalGrid[ i ], 0, 65535);
+        sourceLastUpdateId = source.LastUpdateId;
     }
 
     public void Dispose()

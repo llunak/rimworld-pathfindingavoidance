@@ -16,8 +16,10 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     private readonly Map map;
 
     private NativeArray<ushort> cost;
+    private int lastUpdateId = 0;
 
     public NativeArray<ushort> Cost => cost;
+    public int LastUpdateId => lastUpdateId;
 
     public bool triggerRegenerate = false;
 
@@ -47,6 +49,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             if( terrainDef != null )
                 cost[i] = CalculateCellCost( terrainDef );
         }
+        ++lastUpdateId;
     }
 
     public bool UpdateIncrementally(IEnumerable<PathRequest> requests, List<IntVec3> cellDeltas)
@@ -68,6 +71,8 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             else
                 cost[ num ] = 0;
         }
+        if( cellDeltas.Count != 0 )
+            ++lastUpdateId;
         return false;
     }
 
