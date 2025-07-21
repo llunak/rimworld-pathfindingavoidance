@@ -121,6 +121,7 @@ public static class PathFinder_Patch
                 codes.Insert( i + 3, new CodeInstruction( OpCodes.Ldarg_0 )); // load 'this'
                 codes.Insert( i + 4, new CodeInstruction( OpCodes.Call, typeof(PathFinder_Patch).GetMethod(nameof(Transpiler_Hook))));
                 found = true;
+                break;
             }
         }
         if(!found)
