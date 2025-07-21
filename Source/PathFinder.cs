@@ -143,6 +143,8 @@ public static class PathFinder_Patch
         // TODO Save last pawn/tick and cache result (this gets called several times in a row).
         // This doesn't actually seem to be called that often.
         Pawn pawn = request.pawn;
+        if( pawn == null )
+            return PathType.None;
         if( pawn.IsPlayerControlled )
         {
             // Player-controlled pawns (colonists, mechs) generally follow the rules,
