@@ -22,15 +22,10 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     public NativeArray<ushort> Cost => cost;
     public int LastUpdateId => lastUpdateId;
 
-    public bool triggerRegenerate = false;
-
-    private static List< PathCostSource > allSources = new List< PathCostSource >();
-
     public PathCostSource(Map map, PathType pathType)
     {
         this.map = map;
         this.pathType = pathType;
-        allSources.Add( this );
         int numGridCells = map.cellIndices.NumGridCells;
         cost = new NativeArray<ushort>(numGridCells, Allocator.Persistent);
     }
@@ -38,13 +33,11 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     public void Dispose()
     {
         cost.Dispose();
-        allSources.Remove( this );
     }
 
     public void ComputeAll(IEnumerable<PathRequest> _)
     {
         cost.Clear();
-        triggerRegenerate = false;
         // Filth-avoidance.
         TerrainGrid terrainGrid = map.terrainGrid;
         for( int i = 0; i < map.cellIndices.NumGridCells; ++i )
@@ -80,11 +73,6 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
 
     public bool UpdateIncrementally(IEnumerable<PathRequest> requests, List<IntVec3> cellDeltas)
     {
-        if( triggerRegenerate )
-        {
-            ComputeAll( requests );
-            return true;
-        }
         CellIndices cellIndices = map.cellIndices;
         TerrainGrid terrainGrid = map.terrainGrid;
         foreach( IntVec3 cellDelta in cellDeltas )
@@ -146,11 +134,5 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         if( room.PsychologicallyOutdoors )
             return (ushort) PathfindingAvoidanceMod.settings.visitingCaravanOutdoorsRoomCost;
         return (ushort) PathfindingAvoidanceMod.settings.visitingCaravanIndoorRoomCost;
-    }
-
-    public static void RegenerateAll()
-    {
-        foreach( PathCostSource source in allSources )
-            source.triggerRegenerate = true;
     }
 }

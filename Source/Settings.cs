@@ -79,6 +79,9 @@ public class PathfindingAvoidanceMod : Mod
             settings.visitingCaravanIndoorRoomCost, 0, 500, tooltip : "PathfindingAvoidance.VisitingCaravanIndoorRoomCostTooltip".Translate());
         listing.End();
         base.DoSettingsWindowContents(rect);
-        PathCostSource.RegenerateAll();
+
+        if( Current.Game != null && Current.Game.Maps != null )
+            foreach( Map map in Current.Game.Maps )
+                map.pathFinder.MapData.Notify_MapDirtied();
     }
 }
