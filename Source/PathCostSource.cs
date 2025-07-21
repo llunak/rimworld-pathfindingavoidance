@@ -67,7 +67,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         {
             foreach( Room room in map.regionGrid.AllRooms )
             {
-                ushort roomCost = GetRoomCost( room );
+                ushort roomCost = GetFriendlyRoomCost( room );
                 if( roomCost > 0 )
                 {
                     foreach( IntVec3 pos in room.Cells )
@@ -110,7 +110,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
                 Room room = cellDelta.GetRoom( map );
                 if( room == null )
                     continue;
-                ushort roomCost = GetRoomCost( room );
+                ushort roomCost = GetFriendlyRoomCost( room );
                 if( roomCost > 0 )
                     cost[ cellIndices.CellToIndex( cellDelta ) ] += roomCost;
             }
@@ -139,7 +139,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         };
     }
 
-    private static ushort GetRoomCost( Room room )
+    private static ushort GetFriendlyRoomCost( Room room )
     {
         if( room.IsHuge || room.IsDoorway )
             return 0;
