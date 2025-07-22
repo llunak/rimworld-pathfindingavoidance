@@ -43,6 +43,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         cost.Clear();
         ComputeAllFilth();
         ComputeAllDoors();
+        ComputeAllZones();
         ComputeAllRooms();
         ComputeAllDebug();
         ++lastUpdateId;
@@ -55,6 +56,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             cost[ cellIndices.CellToIndex( cellDelta ) ] = 0;
         UpdateIncrementallyFilth( cellDeltas );
         UpdateIncrementallyDoors( cellDeltas );
+        UpdateIncrementallyZones( cellDeltas );
         UpdateIncrementallyRooms( cellDeltas );
         UpdateIncrementallyDebug( cellDeltas );
         if( cellDeltas.Count != 0 )
@@ -120,6 +122,40 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
                 int num = cellIndices.CellToIndex( cellDelta );
                 if( buildingArray[ num ] is Building_Door door )
                     cost[ num ] += GetDoorCost( door );
+            }
+        }
+    }
+
+    // Avoid growing zones.
+    private void ComputeAllZones()
+    {
+        if( IsEnabledZones())
+        {
+            CellIndices cellIndices = map.cellIndices;
+            foreach( Zone zone in map.zoneManager.AllZones )
+            {
+                ushort zoneCost = GetZoneCost( zone );
+                if( zoneCost > 0 )
+                    // This needs to use 'cells' and not 'Cells', because the latter is not thread-safe.
+                    foreach( IntVec3 pos in zone.cells )
+                        cost[ cellIndices.CellToIndex( pos ) ] += zoneCost;
+            }
+        }
+    }
+
+    private void UpdateIncrementallyZones( List<IntVec3> cellDeltas )
+    {
+        if( IsEnabledZones())
+        {
+            CellIndices cellIndices = map.cellIndices;
+            foreach( IntVec3 cellDelta in cellDeltas )
+            {
+                Zone zone = map.zoneManager.ZoneAt( cellDelta );
+                if( zone == null )
+                    continue;
+                ushort zoneCost = GetZoneCost( zone );
+                if( zoneCost > 0 )
+                    cost[ cellIndices.CellToIndex( cellDelta ) ] += zoneCost;
             }
         }
     }
@@ -216,6 +252,32 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             DoorPriority.Emergency => (ushort) PathfindingAvoidanceMod.settings.emergencyDoorCost,
             _ => throw new ArgumentOutOfRangeException()
         };
+    }
+
+    private bool IsEnabledZones()
+    {
+        return PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ] != 0;
+    }
+
+    public static bool IsEnabledZonesAny( Zone zone )
+    {
+        if( !( zone is Zone_Growing ))
+            return false;
+        foreach( PathType pathType in Enum.GetValues( typeof( PathType )))
+        {
+            if( pathType == PathType.None )
+                continue;
+            if( PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ] != 0 )
+                return true;
+        }
+        return false;
+    }
+
+    private ushort GetZoneCost( Zone zone )
+    {
+        if( !( zone is Zone_Growing ))
+            return 0;
+        return (ushort) PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ];
     }
 
     public static bool IsEnabledRooms()

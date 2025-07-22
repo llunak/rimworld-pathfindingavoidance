@@ -6,6 +6,9 @@
   <PathfindingAvoidance.GeneralCosts>General costs</PathfindingAvoidance.GeneralCosts>
   <PathfindingAvoidance.GeneralCostsTooltip>Costs that apply to most cases - colony members, friendly visitors.</PathfindingAvoidance.GeneralCostsTooltip>
 
+  <PathfindingAvoidance.ColonyCosts>Colony pawns costs</PathfindingAvoidance.ColonyCosts>
+  <PathfindingAvoidance.ColonyCostsTooltip>Costs that apply to colony pawns (colonists, mechs, etc. but not animals).</PathfindingAvoidance.ColonyCostsTooltip>
+
   <PathfindingAvoidance.FriendlyCosts>Friendly pawns costs</PathfindingAvoidance.FriendlyCosts>
   <PathfindingAvoidance.FriendlyCostsTooltip>Costs that apply to friendly pawns, such as visiting trade caravans.</PathfindingAvoidance.FriendlyCostsTooltip>
 
@@ -16,6 +19,9 @@
   <PathfindingAvoidance.SideDoorCostTooltip>Additional perceived cost for using door that has the 'Side Door' priority set. The higher the number, the more friendly pawns will try to avoid the door.</PathfindingAvoidance.SideDoorCostTooltip>
   <PathfindingAvoidance.EmergencyDoorCost>Extra cost for emergency door: {0}</PathfindingAvoidance.EmergencyDoorCost>
   <PathfindingAvoidance.EmergencyDoorCostTooltip>Additional perceived cost for using door that has the 'Emergency Door' priority set. The higher the number, the more friendly pawns will try to avoid the door.</PathfindingAvoidance.EmergencyDoorCostTooltip>
+
+  <PathfindingAvoidance.GrowingZoneCost>Extra cost for growing zone tiles: {0}</PathfindingAvoidance.GrowingZoneCost>
+  <PathfindingAvoidance.GrowingZoneCostTooltip>Additional perceived cost for walking on growing zones. The higher the number, the more friendly pawns will try to avoid the door.</PathfindingAvoidance.GrowingZoneCostTooltip>
 
   <PathfindingAvoidance.VisitingCaravanOutdoorsRoomCost>Extra cost for outdoor room tiles: {0}</PathfindingAvoidance.VisitingCaravanOutdoorsRoomCost>
   <PathfindingAvoidance.VisitingCaravanOutdoorsRoomCostTooltip>Additional perceived cost for using outdoor room. The higher the number, the more friendly pawns will try to avoid such rooms.</PathfindingAvoidance.VisitingCaravanOutdoorsRoomCostTooltip>

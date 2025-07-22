@@ -10,6 +10,7 @@ public class Settings : ModSettings
     public int emergencyDoorCost = 500;
     public int visitingCaravanOutdoorsRoomCost = 10;
     public int visitingCaravanIndoorRoomCost = 100;
+    public int[] growingZoneCost = new int[] { 0, 10, 10 };
 
     public override void ExposeData()
     {
@@ -18,6 +19,8 @@ public class Settings : ModSettings
         Scribe_Values.Look( ref emergencyDoorCost, "EmergencyDoorCost", 500 );
         Scribe_Values.Look( ref visitingCaravanOutdoorsRoomCost, "VisitingCaravanOutdoorsRoomCost", 10 );
         Scribe_Values.Look( ref visitingCaravanIndoorRoomCost, "VisitingCaravanIndoorRoomCost", 100 );
+        Scribe_Values.Look( ref growingZoneCost[ (int)PathType.Colony ], "GrowingZoneCostColony", 10 );
+        Scribe_Values.Look( ref growingZoneCost[ (int)PathType.Friendly ], "GrowingZoneCostFriendly", 10 );
     }
 
     public bool IsEnabled(PathType pathType)
@@ -27,11 +30,13 @@ public class Settings : ModSettings
         switch( pathType )
         {
             case PathType.Colony:
-                return dirtyCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0;
+                return dirtyCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0
+                    || growingZoneCost[ (int)pathType ] != 0;
             case PathType.Friendly:
                 return dirtyCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0
                     || visitingCaravanOutdoorsRoomCost != 0
-                    || visitingCaravanIndoorRoomCost != 0;
+                    || visitingCaravanIndoorRoomCost != 0
+                    || growingZoneCost[ (int)pathType ] != 0;
             case PathType.None:
             default:
                 return false;
@@ -69,6 +74,13 @@ public class PathfindingAvoidanceMod : Mod
             settings.emergencyDoorCost, 200, 1000, tooltip : "PathfindingAvoidance.EmergencyDoorCostTooltip".Translate());
 
         listing.Gap();
+        listing.Label( "PathfindingAvoidance.ColonyCosts".Translate(), tooltip : "PathfindingAvoidance.ColonyCostsTooltip".Translate());
+        listing.GapLine();
+        settings.growingZoneCost[ (int)PathType.Colony ] = (int) listing.SliderLabeled( "PathfindingAvoidance.GrowingZoneCost"
+            .Translate( settings.growingZoneCost[ (int)PathType.Colony ] ), settings.growingZoneCost[ (int)PathType.Colony ],
+            0, 100, tooltip : "PathfindingAvoidance.GrowingZoneCostTooltip".Translate());
+
+        listing.Gap();
         listing.Label( "PathfindingAvoidance.FriendlyCosts".Translate(), tooltip : "PathfindingAvoidance.FriendlyCostsTooltip".Translate());
         listing.GapLine();
         settings.visitingCaravanOutdoorsRoomCost = (int) listing.SliderLabeled(
@@ -77,6 +89,9 @@ public class PathfindingAvoidanceMod : Mod
         settings.visitingCaravanIndoorRoomCost = (int) listing.SliderLabeled(
             "PathfindingAvoidance.VisitingCaravanIndoorRoomCost".Translate( settings.visitingCaravanIndoorRoomCost ),
             settings.visitingCaravanIndoorRoomCost, 0, 500, tooltip : "PathfindingAvoidance.VisitingCaravanIndoorRoomCostTooltip".Translate());
+        settings.growingZoneCost[ (int)PathType.Friendly ] = (int) listing.SliderLabeled( "PathfindingAvoidance.GrowingZoneCost"
+            .Translate( settings.growingZoneCost[ (int)PathType.Friendly ] ), settings.growingZoneCost[ (int)PathType.Friendly ],
+            0, 100, tooltip : "PathfindingAvoidance.GrowingZoneCostTooltip".Translate());
         listing.End();
         base.DoSettingsWindowContents(rect);
 

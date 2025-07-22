@@ -92,6 +92,27 @@ public static class PathFinderMapData_Patch
     }
 }
 
+// Update if a zone changes.
+[HarmonyPatch(typeof(Zone))]
+public static class Zone_Patch
+{
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(AddCell))]
+    public static void AddCell(Zone __instance, IntVec3 c)
+    {
+        if( PathCostSource.IsEnabledZonesAny( __instance ))
+            __instance.Map.pathFinder.MapData.Notify_CellDelta( c );
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(RemoveCell))]
+    public static void RemoveCell(Zone __instance, IntVec3 c)
+    {
+        if( PathCostSource.IsEnabledZonesAny( __instance ))
+            __instance.Map.pathFinder.MapData.Notify_CellDelta( c );
+    }
+}
+
 // Need to override the customizer in created MapGridRequest objects.
 [HarmonyPatch(typeof(PathFinder))]
 public static class PathFinder_Patch
