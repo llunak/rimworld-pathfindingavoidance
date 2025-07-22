@@ -218,7 +218,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         };
     }
 
-    private static bool IsEnabledRooms()
+    public static bool IsEnabledRooms()
     {
         return PathfindingAvoidanceMod.settings.visitingCaravanOutdoorsRoomCost != 0
             || PathfindingAvoidanceMod.settings.visitingCaravanIndoorRoomCost != 0;

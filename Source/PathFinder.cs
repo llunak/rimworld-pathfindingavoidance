@@ -43,6 +43,7 @@ public static class PathFinderMapData_Patch
                 __instance.RegisterSource( source );
             }
         }
+        map.events.RegionsRoomsChanged += () => RegionsRoomsChanged( __instance );
     }
 
     [HarmonyPrefix]
@@ -50,6 +51,14 @@ public static class PathFinderMapData_Patch
     public static void Dispose(PathFinderMapData __instance)
     {
         Customizer.RemoveMap( __instance );
+    }
+
+    private static void RegionsRoomsChanged( PathFinderMapData mapData )
+    {
+        // If a room changes, need to update costs. There is no info about cells affected,
+        // so dirty the entire map if needed.
+        if( PathCostSource.IsEnabledRooms())
+            mapData.Notify_MapDirtied();
     }
 
     private static FieldInfo pathRequestCustomizer = AccessTools.Field( typeof( PathRequest ), "customizer" );
