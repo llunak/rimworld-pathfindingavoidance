@@ -72,7 +72,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             {
                 TerrainDef terrainDef = terrainGrid.TerrainAt( i );
                 if( terrainDef != null )
-                    cost[i] += CalculateTerrainCellCost( terrainDef );
+                    cost[i] += GetTerrainCost( terrainDef );
             }
         }
     }
@@ -88,7 +88,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
                 int num = cellIndices.CellToIndex( cellDelta );
                 TerrainDef terrainDef = terrainGrid.TerrainAt( num );
                 if (terrainDef != null)
-                    cost[ num ] += CalculateTerrainCellCost( terrainDef );
+                    cost[ num ] += GetTerrainCost( terrainDef );
             }
         }
     }
@@ -188,12 +188,12 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         }
     }
 
-    private bool IsEnabledFilth()
+    private static bool IsEnabledFilth()
     {
         return PathfindingAvoidanceMod.settings.dirtyCost != 0;
     }
 
-    private static ushort CalculateTerrainCellCost( TerrainDef terrainDef )
+    private static ushort GetTerrainCost( TerrainDef terrainDef )
     {
         ushort cost = 0;
         if( terrainDef.generatedFilth != null )
@@ -201,7 +201,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         return cost;
     }
 
-    private bool IsEnabledDoors()
+    private static bool IsEnabledDoors()
     {
         return PathfindingAvoidanceMod.settings.sideDoorCost != 0
             || PathfindingAvoidanceMod.settings.emergencyDoorCost != 0;
@@ -218,7 +218,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         };
     }
 
-    private bool IsEnabledRooms()
+    private static bool IsEnabledRooms()
     {
         return PathfindingAvoidanceMod.settings.visitingCaravanOutdoorsRoomCost != 0
             || PathfindingAvoidanceMod.settings.visitingCaravanIndoorRoomCost != 0;
