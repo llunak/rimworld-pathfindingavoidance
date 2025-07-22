@@ -13,6 +13,9 @@ namespace PathfindingAvoidance;
 // which have filth-generating terrain.
 public class PathCostSource : IPathFinderDataSource, IDisposable
 {
+    // Change to other PathType to enable drawing of costs.
+    private const PathType DEBUG_TYPE = PathType.None;
+
     private readonly Map map;
     private readonly PathType pathType;
 
@@ -69,6 +72,16 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             }
         }
         ++lastUpdateId;
+        if( pathType == DEBUG_TYPE )
+        {
+            map.debugDrawer.debugCells.Clear(); // FlashCell() adds unconditionally, so remove old, they'll be overwritten
+            for( int i = 0; i < map.cellIndices.NumGridCells; ++i )
+            {
+                IntVec3 cell = cellIndices.IndexToCell( i );
+                // TODO use a better mapping for the cost range
+                map.debugDrawer.FlashCell( cell, cost[ i ] / 2000f, cost[ i ].ToString());
+            }
+        }
     }
 
     public bool UpdateIncrementally(IEnumerable<PathRequest> requests, List<IntVec3> cellDeltas)
@@ -105,6 +118,15 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
         }
         if( cellDeltas.Count != 0 )
             ++lastUpdateId;
+        if( pathType == DEBUG_TYPE )
+        {
+            foreach( IntVec3 cellDelta in cellDeltas )
+            {
+                int num = cellIndices.CellToIndex( cellDelta );
+                map.debugDrawer.debugCells.RemoveAll( ( DebugCell c ) => c.c == cellDelta );
+                map.debugDrawer.FlashCell( cellDelta, cost[ num ] / 2000f, cost[ num ].ToString());
+            }
+        }
         return false;
     }
 
