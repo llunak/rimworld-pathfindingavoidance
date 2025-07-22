@@ -41,7 +41,35 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
     public void ComputeAll(IEnumerable<PathRequest> _)
     {
         cost.Clear();
-        // Filth-avoidance.
+        ComputeAllFilth();
+        ComputeAllDoors();
+        // Make friendly visits avoid walking through rooms.
+        if( pathType == PathType.Friendly )
+            ComputeAllRooms();
+        if( pathType == DEBUG_TYPE )
+            ComputeAllDebug();
+        ++lastUpdateId;
+    }
+
+    public bool UpdateIncrementally(IEnumerable<PathRequest> _, List<IntVec3> cellDeltas)
+    {
+        CellIndices cellIndices = map.cellIndices;
+        foreach( IntVec3 cellDelta in cellDeltas )
+            cost[ cellIndices.CellToIndex( cellDelta ) ] = 0;
+        UpdateIncrementallyFilth( cellDeltas );
+        UpdateIncrementallyDoors( cellDeltas );
+        if( pathType == PathType.Friendly )
+            UpdateIncrementallyRooms( cellDeltas );
+        if( pathType == DEBUG_TYPE )
+            UpdateIncrementallyDebug( cellDeltas );
+        if( cellDeltas.Count != 0 )
+            ++lastUpdateId;
+        return false;
+    }
+
+    // Avoid cells with terrain that creates filth.
+    private void ComputeAllFilth()
+    {
         TerrainGrid terrainGrid = map.terrainGrid;
         for( int i = 0; i < map.cellIndices.NumGridCells; ++i )
         {
@@ -49,42 +77,9 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             if( terrainDef != null )
                 cost[i] += CalculateTerrainCellCost( terrainDef );
         }
-        // Door priority.
-        CellIndices cellIndices = map.cellIndices;
-        foreach( Building_Door door in map.listerBuildings.AllBuildingsColonistOfClass< Building_Door >())
-        {
-            ushort doorCost = GetDoorCost( door );
-            if( doorCost > 0 )
-                foreach( IntVec3 pos in door.OccupiedRect().Cells )
-                    cost[ cellIndices.CellToIndex( pos ) ] += doorCost;
-        }
-        // Make friendly visits avoid walking through rooms.
-        if( pathType == PathType.Friendly )
-        {
-            foreach( Room room in map.regionGrid.AllRooms )
-            {
-                ushort roomCost = GetFriendlyRoomCost( room );
-                if( roomCost > 0 )
-                {
-                    foreach( IntVec3 pos in room.Cells )
-                        cost[ cellIndices.CellToIndex( pos ) ] += roomCost;
-                }
-            }
-        }
-        ++lastUpdateId;
-        if( pathType == DEBUG_TYPE )
-        {
-            map.debugDrawer.debugCells.Clear(); // FlashCell() adds unconditionally, so remove old, they'll be overwritten
-            for( int i = 0; i < map.cellIndices.NumGridCells; ++i )
-            {
-                IntVec3 cell = cellIndices.IndexToCell( i );
-                // TODO use a better mapping for the cost range
-                map.debugDrawer.FlashCell( cell, cost[ i ] / 2000f, cost[ i ].ToString());
-            }
-        }
     }
 
-    public bool UpdateIncrementally(IEnumerable<PathRequest> requests, List<IntVec3> cellDeltas)
+    private void UpdateIncrementallyFilth( List<IntVec3> cellDeltas )
     {
         CellIndices cellIndices = map.cellIndices;
         TerrainGrid terrainGrid = map.terrainGrid;
@@ -93,10 +88,26 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             int num = cellIndices.CellToIndex( cellDelta );
             TerrainDef terrainDef = terrainGrid.TerrainAt( num );
             if (terrainDef != null)
-                cost[ num ] = CalculateTerrainCellCost( terrainDef );
-            else
-                cost[ num ] = 0;
+                cost[ num ] += CalculateTerrainCellCost( terrainDef );
         }
+    }
+
+    // Avoid doors with configured priority.
+    private void ComputeAllDoors()
+    {
+        CellIndices cellIndices = map.cellIndices;
+        foreach( Building_Door door in map.listerBuildings.AllBuildingsColonistOfClass< Building_Door >())
+        {
+            ushort doorCost = GetDoorCost( door );
+            if( doorCost > 0 )
+                foreach( IntVec3 pos in door.OccupiedRect().Cells )
+                    cost[ cellIndices.CellToIndex( pos ) ] += doorCost;
+        }
+    }
+
+    private void UpdateIncrementallyDoors( List<IntVec3> cellDeltas )
+    {
+        CellIndices cellIndices = map.cellIndices;
         Building[] buildingArray = map.edificeGrid.InnerArray;
         foreach( IntVec3 cellDelta in cellDeltas )
         {
@@ -104,30 +115,58 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
             if( buildingArray[ num ] is Building_Door door )
                 cost[ num ] += GetDoorCost( door );
         }
-        if( pathType == PathType.Friendly )
+    }
+
+    // Avoid rooms.
+    private void ComputeAllRooms()
+    {
+        CellIndices cellIndices = map.cellIndices;
+        foreach( Room room in map.regionGrid.AllRooms )
         {
-            foreach( IntVec3 cellDelta in cellDeltas )
+            ushort roomCost = GetFriendlyRoomCost( room );
+            if( roomCost > 0 )
             {
-                Room room = cellDelta.GetRoom( map );
-                if( room == null )
-                    continue;
-                ushort roomCost = GetFriendlyRoomCost( room );
-                if( roomCost > 0 )
-                    cost[ cellIndices.CellToIndex( cellDelta ) ] += roomCost;
+                foreach( IntVec3 pos in room.Cells )
+                    cost[ cellIndices.CellToIndex( pos ) ] += roomCost;
             }
         }
-        if( cellDeltas.Count != 0 )
-            ++lastUpdateId;
-        if( pathType == DEBUG_TYPE )
+    }
+
+    private void UpdateIncrementallyRooms( List<IntVec3> cellDeltas )
+    {
+        CellIndices cellIndices = map.cellIndices;
+        foreach( IntVec3 cellDelta in cellDeltas )
         {
-            foreach( IntVec3 cellDelta in cellDeltas )
-            {
-                int num = cellIndices.CellToIndex( cellDelta );
-                map.debugDrawer.debugCells.RemoveAll( ( DebugCell c ) => c.c == cellDelta );
-                map.debugDrawer.FlashCell( cellDelta, cost[ num ] / 2000f, cost[ num ].ToString());
-            }
+            Room room = cellDelta.GetRoom( map );
+            if( room == null )
+                continue;
+            ushort roomCost = GetFriendlyRoomCost( room );
+            if( roomCost > 0 )
+                cost[ cellIndices.CellToIndex( cellDelta ) ] += roomCost;
         }
-        return false;
+    }
+
+    private void ComputeAllDebug()
+    {
+        CellIndices cellIndices = map.cellIndices;
+        map.debugDrawer.debugCells.Clear(); // FlashCell() adds unconditionally, so remove old, they'll be overwritten
+        for( int i = 0; i < map.cellIndices.NumGridCells; ++i )
+        {
+            IntVec3 cell = cellIndices.IndexToCell( i );
+            // TODO use a better mapping for the cost range
+            map.debugDrawer.FlashCell( cell, cost[ i ] / 2000f, cost[ i ].ToString());
+        }
+    }
+
+    private void UpdateIncrementallyDebug( List<IntVec3> cellDeltas )
+    {
+        CellIndices cellIndices = map.cellIndices;
+        foreach( IntVec3 cellDelta in cellDeltas )
+        {
+            int num = cellIndices.CellToIndex( cellDelta );
+            map.debugDrawer.debugCells.RemoveAll( ( DebugCell c ) => c.c == cellDelta );
+            map.debugDrawer.FlashCell( cellDelta, cost[ num ] / 2000f, cost[ num ].ToString());
+        }
     }
 
     private static ushort CalculateTerrainCellCost( TerrainDef terrainDef )
