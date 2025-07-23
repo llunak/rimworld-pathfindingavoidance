@@ -11,6 +11,7 @@ namespace PathfindingAvoidance;
 
 // Based on PerceptualSource, calculate extra perceived path cost for cells
 // which have filth-generating terrain.
+// NOTE: This is called from parallel threads, and so must be thread-safe, including the code it calls.
 public class PathCostSource : IPathFinderDataSource, IDisposable
 {
     // Change to other PathType to enable drawing of costs.
@@ -245,7 +246,7 @@ public class PathCostSource : IPathFinderDataSource, IDisposable
 
     private static ushort GetDoorCost( Building_Door door )
     {
-        return DoorPriorityInfo.Get( door ).DoorPriority switch
+        return DoorPriorityInfo.GetNoCreate( door ).DoorPriority switch
         {
             DoorPriority.Normal => 0,
             DoorPriority.Side => (ushort) PathfindingAvoidanceMod.settings.sideDoorCost,

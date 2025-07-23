@@ -37,9 +37,19 @@ public class DoorPriorityInfo
         return info;
     }
 
+    public static DoorPriorityInfo GetNoCreate( Building_Door door )
+    {
+        return dict[ door ];
+    }
+
     public static void Remove( Building_Door door )
     {
         dict.Remove( door );
+    }
+
+    public static void RemoveAll()
+    {
+        dict.Clear();
     }
 
     public void SwitchNextPriority()
@@ -71,6 +81,13 @@ public static class Building_Door_Patch
     }
 
     [HarmonyPostfix]
+    [HarmonyPatch(nameof(SpawnSetup))]
+    public static void SpawnSetup( Building_Door __instance )
+    {
+        DoorPriorityInfo.Get( __instance ); // Create the info if needed.
+    }
+
+    [HarmonyPostfix]
     [HarmonyPatch(nameof(DeSpawn))]
     public static void DeSpawn( Building_Door __instance )
     {
@@ -94,5 +111,23 @@ public static class Building_Door_Patch
         action.activateSound = SoundDefOf.Checkbox_TurnedOn;
         action.action = () => info.SwitchNextPriority();
         yield return action;
+    }
+}
+
+[HarmonyPatch(typeof(Game))]
+public static class Game_Patch
+{
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(InitNewGame))]
+    public static void InitNewGame()
+    {
+        DoorPriorityInfo.RemoveAll();
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(LoadGame))]
+    public static void LoadGame()
+    {
+        DoorPriorityInfo.RemoveAll();
     }
 }
