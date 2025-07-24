@@ -176,7 +176,7 @@ public static class PathFinder_Patch
         Pawn pawn = request.pawn;
         if( pawn == null )
             return PathType.None;
-        if( pawn.IsPlayerControlled )
+        if( pawn.IsPlayerControlled || Utility.ShouldAlsoTreatAsColonist( pawn ))
         {
             // Player-controlled pawns (colonists, mechs) generally follow the rules,
             // with some exceptions.
