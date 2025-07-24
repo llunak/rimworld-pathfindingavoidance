@@ -33,6 +33,9 @@ public static class PathTypeUtils
             // with some exceptions.
             if( pawn.IsAnimal || pawn.Drafted || pawn.Crawling )
                 return PathType.None;
+            // Firefighting, emergency tending, etc.
+            if( pawn.CurJob?.workGiverDef?.emergency == true )
+                return PathType.None;
             // Some things inspired by GatheringsUtility.ShouldGuestKeepAttendingGathering().
             if( pawn.health.hediffSet.BleedRateTotal > 0.3f || pawn.health.hediffSet.InLabor())
                 return PathType.None;
