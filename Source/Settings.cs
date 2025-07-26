@@ -5,22 +5,30 @@ namespace PathfindingAvoidance;
 
 public class Settings : ModSettings
 {
-    public int dirtyCost = 10;
-    public int sideDoorCost = 200;
-    public int emergencyDoorCost = 500;
-    public int visitingCaravanOutdoorsRoomCost = 10;
-    public int visitingCaravanIndoorRoomCost = 100;
-    public int[] growingZoneCost = new int[] { 0, 10, 10 };
+    private const int DIRTY_COST = 10;
+    private const int SIDE_DOOR_COST = 200;
+    private const int EMERGENCY_DOOR_COST = 500;
+    private const int VISITING_CARAVAN_OUTDOORS_ROOM_COST = 10;
+    private const int VISITING_CARAVAN_INDOOR_ROOM_COST = 100;
+    private const int GROWING_ZONE_COST_COLONY = 10;
+    private const int GROWING_ZONE_COST_FRIENDLY = 10;
+
+    public int dirtyCost = DIRTY_COST;
+    public int sideDoorCost = SIDE_DOOR_COST;
+    public int emergencyDoorCost = EMERGENCY_DOOR_COST;
+    public int visitingCaravanOutdoorsRoomCost = VISITING_CARAVAN_OUTDOORS_ROOM_COST;
+    public int visitingCaravanIndoorRoomCost = VISITING_CARAVAN_INDOOR_ROOM_COST;
+    public int[] growingZoneCost = new int[] { 0, GROWING_ZONE_COST_COLONY, GROWING_ZONE_COST_FRIENDLY };
 
     public override void ExposeData()
     {
-        Scribe_Values.Look( ref dirtyCost, "DirtyCost", 10 );
-        Scribe_Values.Look( ref sideDoorCost, "SideDoorCost", 200 );
-        Scribe_Values.Look( ref emergencyDoorCost, "EmergencyDoorCost", 500 );
-        Scribe_Values.Look( ref visitingCaravanOutdoorsRoomCost, "VisitingCaravanOutdoorsRoomCost", 10 );
-        Scribe_Values.Look( ref visitingCaravanIndoorRoomCost, "VisitingCaravanIndoorRoomCost", 100 );
-        Scribe_Values.Look( ref growingZoneCost[ (int)PathType.Colony ], "GrowingZoneCostColony", 10 );
-        Scribe_Values.Look( ref growingZoneCost[ (int)PathType.Friendly ], "GrowingZoneCostFriendly", 10 );
+        Scribe_Values.Look( ref dirtyCost, "DirtyCost", DIRTY_COST );
+        Scribe_Values.Look( ref sideDoorCost, "SideDoorCost", SIDE_DOOR_COST );
+        Scribe_Values.Look( ref emergencyDoorCost, "EmergencyDoorCost", EMERGENCY_DOOR_COST );
+        Scribe_Values.Look( ref visitingCaravanOutdoorsRoomCost, "VisitingCaravanOutdoorsRoomCost", VISITING_CARAVAN_OUTDOORS_ROOM_COST );
+        Scribe_Values.Look( ref visitingCaravanIndoorRoomCost, "VisitingCaravanIndoorRoomCost", VISITING_CARAVAN_INDOOR_ROOM_COST );
+        Scribe_Values.Look( ref growingZoneCost[ (int)PathType.Colony ], "GrowingZoneCostColony", GROWING_ZONE_COST_COLONY );
+        Scribe_Values.Look( ref growingZoneCost[ (int)PathType.Friendly ], "GrowingZoneCostFriendly", GROWING_ZONE_COST_FRIENDLY );
     }
 
     public bool IsEnabled(PathType pathType)
