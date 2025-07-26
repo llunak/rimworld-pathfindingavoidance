@@ -27,6 +27,8 @@ public static class PathTypeUtils
         Pawn pawn = request.pawn;
         if( pawn == null )
             return PathType.None;
+        if( Utility.IsBPCOnAlert()) // Better Pawn Control
+            return PathType.None;
         if( pawn.IsPlayerControlled || Utility.ShouldAlsoTreatAsColonist( pawn ))
         {
             // Player-controlled pawns (colonists, mechs) generally follow the rules,
