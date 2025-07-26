@@ -36,6 +36,10 @@ public static class PathTypeUtils
             // Firefighting, emergency tending, etc.
             if( pawn.CurJob?.workGiverDef?.emergency == true )
                 return PathType.None;
+            if( pawn.IsAttacking())
+                return PathType.None;
+            if( pawn.jobs?.curDriver is JobDriver_Flee )
+                return PathType.None;
             // Some things inspired by GatheringsUtility.ShouldGuestKeepAttendingGathering().
             if( pawn.health.hediffSet.BleedRateTotal > 0.3f || pawn.health.hediffSet.InLabor())
                 return PathType.None;
@@ -57,7 +61,8 @@ public static class PathTypeUtils
         if( pawn.InMentalState
             || pawn.mindState?.meleeThreat != null
             || pawn.mindState?.enemyTarget != null
-            /*|| ( pawn.mindState?.WasRecentlyCombatantTicks( 10 ) ?? false ) does not work unfortunately*/)
+            /*|| ( pawn.mindState?.WasRecentlyCombatantTicks( 10 ) ?? false ) does not work unfortunately*/
+            || pawn.IsAttacking() || pawn.jobs?.curDriver is JobDriver_Flee )
         {
             return PathType.None;
         }
