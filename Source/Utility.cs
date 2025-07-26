@@ -1,5 +1,6 @@
 using HarmonyLib;
 using Verse;
+using System;
 using System.Reflection;
 
 namespace PathfindingAvoidance;
@@ -18,8 +19,13 @@ public class Utility
     private static BPCOnAlertDelegate bpcOnAlertDelegate = InitBPCOnAlertDelegate();
     private static BPCOnAlertDelegate InitBPCOnAlertDelegate()
     {
-        MethodInfo method = AccessTools.PropertyGetter( "BetterPawnControl.AlertManager:OnAlert" );
-        return method != null ? AccessTools.MethodDelegate< BPCOnAlertDelegate >( method ) : null;
+        Type type = AccessTools.TypeByName( "BetterPawnControl.AlertManager" );
+        if( type == null )
+            return null;
+        MethodInfo method = AccessTools.PropertyGetter( type, "OnAlert" );
+        if( method == null )
+            return null;
+        return AccessTools.MethodDelegate< BPCOnAlertDelegate >( method );
     }
 
     public static bool IsBPCOnAlert()
