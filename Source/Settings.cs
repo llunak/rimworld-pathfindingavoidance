@@ -5,13 +5,13 @@ namespace PathfindingAvoidance;
 
 public class Settings : ModSettings
 {
-    private const int DIRTY_COST = 10;
-    private const int SIDE_DOOR_COST = 200;
-    private const int EMERGENCY_DOOR_COST = 500;
-    private const int VISITING_CARAVAN_OUTDOORS_ROOM_COST = 10;
-    private const int VISITING_CARAVAN_INDOOR_ROOM_COST = 100;
-    private const int GROWING_ZONE_COST_COLONY = 10;
-    private const int GROWING_ZONE_COST_FRIENDLY = 10;
+    public const int DIRTY_COST = 10;
+    public const int SIDE_DOOR_COST = 200;
+    public const int EMERGENCY_DOOR_COST = 500;
+    public const int VISITING_CARAVAN_OUTDOORS_ROOM_COST = 10;
+    public const int VISITING_CARAVAN_INDOOR_ROOM_COST = 100;
+    public const int GROWING_ZONE_COST_COLONY = 10;
+    public const int GROWING_ZONE_COST_FRIENDLY = 10;
 
     public int dirtyCost = DIRTY_COST;
     public int sideDoorCost = SIDE_DOOR_COST;
@@ -75,31 +75,38 @@ public class PathfindingAvoidanceMod : Mod
         listing.Label( "PathfindingAvoidance.GeneralCosts".Translate(), tooltip : "PathfindingAvoidance.GeneralCostsTooltip".Translate());
         listing.GapLine();
         settings.dirtyCost = (int) listing.SliderLabeled( "PathfindingAvoidance.DirtyCost".Translate( settings.dirtyCost ),
-            settings.dirtyCost, 0, 100, tooltip : "PathfindingAvoidance.DirtyCostTooltip".Translate());
+            settings.dirtyCost, 0, 100, tooltip : "PathfindingAvoidance.DirtyCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.DIRTY_COST ));
         settings.sideDoorCost = (int) listing.SliderLabeled( "PathfindingAvoidance.SideDoorCost".Translate( settings.sideDoorCost ),
-            settings.sideDoorCost, 50, 500, tooltip : "PathfindingAvoidance.SideDoorCostTooltip".Translate());
+            settings.sideDoorCost, 50, 500, tooltip : "PathfindingAvoidance.SideDoorCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.SIDE_DOOR_COST ));
         settings.emergencyDoorCost = (int) listing.SliderLabeled( "PathfindingAvoidance.EmergencyDoorCost".Translate( settings.emergencyDoorCost ),
-            settings.emergencyDoorCost, 200, 1000, tooltip : "PathfindingAvoidance.EmergencyDoorCostTooltip".Translate());
+            settings.emergencyDoorCost, 200, 1000, tooltip : "PathfindingAvoidance.EmergencyDoorCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.EMERGENCY_DOOR_COST ));
 
         listing.Gap();
         listing.Label( "PathfindingAvoidance.ColonyCosts".Translate(), tooltip : "PathfindingAvoidance.ColonyCostsTooltip".Translate());
         listing.GapLine();
         settings.growingZoneCost[ (int)PathType.Colony ] = (int) listing.SliderLabeled( "PathfindingAvoidance.GrowingZoneCost"
             .Translate( settings.growingZoneCost[ (int)PathType.Colony ] ), settings.growingZoneCost[ (int)PathType.Colony ],
-            0, 100, tooltip : "PathfindingAvoidance.GrowingZoneCostTooltip".Translate());
+            0, 100, tooltip : "PathfindingAvoidance.GrowingZoneCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.GROWING_ZONE_COST_COLONY ));
 
         listing.Gap();
         listing.Label( "PathfindingAvoidance.FriendlyCosts".Translate(), tooltip : "PathfindingAvoidance.FriendlyCostsTooltip".Translate());
         listing.GapLine();
         settings.visitingCaravanOutdoorsRoomCost = (int) listing.SliderLabeled(
             "PathfindingAvoidance.VisitingCaravanOutdoorsRoomCost".Translate( settings.visitingCaravanOutdoorsRoomCost ),
-            settings.visitingCaravanOutdoorsRoomCost, 0, 500, tooltip : "PathfindingAvoidance.VisitingCaravanOutdoorsRoomCostTooltip".Translate());
+            settings.visitingCaravanOutdoorsRoomCost, 0, 500, tooltip : "PathfindingAvoidance.VisitingCaravanOutdoorsRoomCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.VISITING_CARAVAN_OUTDOORS_ROOM_COST ));
         settings.visitingCaravanIndoorRoomCost = (int) listing.SliderLabeled(
             "PathfindingAvoidance.VisitingCaravanIndoorRoomCost".Translate( settings.visitingCaravanIndoorRoomCost ),
-            settings.visitingCaravanIndoorRoomCost, 0, 500, tooltip : "PathfindingAvoidance.VisitingCaravanIndoorRoomCostTooltip".Translate());
+            settings.visitingCaravanIndoorRoomCost, 0, 500, tooltip : "PathfindingAvoidance.VisitingCaravanIndoorRoomCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.VISITING_CARAVAN_INDOOR_ROOM_COST ));
         settings.growingZoneCost[ (int)PathType.Friendly ] = (int) listing.SliderLabeled( "PathfindingAvoidance.GrowingZoneCost"
             .Translate( settings.growingZoneCost[ (int)PathType.Friendly ] ), settings.growingZoneCost[ (int)PathType.Friendly ],
-            0, 100, tooltip : "PathfindingAvoidance.GrowingZoneCostTooltip".Translate());
+            0, 100, tooltip : "PathfindingAvoidance.GrowingZoneCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.GROWING_ZONE_COST_FRIENDLY ));
         listing.End();
         base.DoSettingsWindowContents(rect);
 
