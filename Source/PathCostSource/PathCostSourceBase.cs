@@ -24,7 +24,7 @@ public abstract class PathCostSourceBase : IPathFinderDataSource, IDisposable
         costGrid = new NativeArray<ushort>(numGridCells, Allocator.Persistent);
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         costGrid.Dispose();
     }

@@ -3,6 +3,7 @@ using Verse;
 using System;
 using System.Collections.Generic;
 using LudeonTK;
+using HarmonyLib;
 
 namespace PathfindingAvoidance;
 
@@ -10,11 +11,20 @@ namespace PathfindingAvoidance;
 public class ZoneCostSource : PathCostSourceBase
 {
     private readonly PathType pathType;
+    private static List< ZoneCostSource > sources = []; // There won't be that many maps, List is fine.
+    private List< IntVec3 > pendingCells = [];
 
     public ZoneCostSource(Map map, PathType pathType)
         : base( map )
     {
         this.pathType = pathType;
+        sources.Add( this );
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        sources.Remove( this );
     }
 
     public static bool IsEnabled( PathType pathType )
@@ -22,23 +32,10 @@ public class ZoneCostSource : PathCostSourceBase
         return PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ] != 0;
     }
 
-    public static bool IsEnabledAny( Zone zone )
-    {
-        if( !( zone is Zone_Growing ))
-            return false;
-        foreach( PathType pathType in Enum.GetValues( typeof( PathType )))
-        {
-            if( pathType == PathType.None )
-                continue;
-            if( PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ] != 0 )
-                return true;
-        }
-        return false;
-    }
-
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
         costGrid.Clear();
+        pendingCells.Clear();
         CellIndices cellIndices = map.cellIndices;
         foreach( Zone zone in map.zoneManager.AllZones )
         {
@@ -53,14 +50,23 @@ public class ZoneCostSource : PathCostSourceBase
     public override bool UpdateIncrementally(IEnumerable<PathRequest> _, List<IntVec3> cellDeltas)
     {
         CellIndices cellIndices = map.cellIndices;
-        foreach( IntVec3 cellDelta in cellDeltas )
+        var updateCell = ( IntVec3 cell ) =>
         {
-            int num = cellIndices.CellToIndex( cellDelta );
-            Zone zone = map.zoneManager.ZoneAt( cellDelta );
+            int num = cellIndices.CellToIndex( cell );
+            Zone zone = map.zoneManager.ZoneAt( cell );
             ushort zoneCost = GetZoneCost( zone );
             costGrid[ num ] = zoneCost;
+        };
+        foreach( IntVec3 cellDelta in cellDeltas )
+            updateCell( cellDelta );
+        foreach( IntVec3 cell in pendingCells )
+        {
+            updateCell( cell );
+            extraChangedCells.Add( cell );
         }
-        return false;
+        bool result = pendingCells.Count != 0;
+        pendingCells.Clear();
+        return result;
     }
 
     private ushort GetZoneCost( Zone zone )
@@ -68,5 +74,33 @@ public class ZoneCostSource : PathCostSourceBase
         if( !( zone is Zone_Growing ))
             return 0;
         return (ushort) PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ];
+    }
+
+    public static void ZoneCellChanged( Zone zone, IntVec3 cell )
+    {
+        if( !( zone is Zone_Growing ))
+            return;
+        foreach( ZoneCostSource source in sources )
+            if( source.map == zone.Map )
+                source.pendingCells.Add( cell );
+    }
+}
+
+// Update if a zone changes.
+[HarmonyPatch(typeof(Zone))]
+public static class Zone_Patch
+{
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(AddCell))]
+    public static void AddCell(Zone __instance, IntVec3 c)
+    {
+        ZoneCostSource.ZoneCellChanged( __instance, c );
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(RemoveCell))]
+    public static void RemoveCell(Zone __instance, IntVec3 c)
+    {
+        ZoneCostSource.ZoneCellChanged( __instance, c );
     }
 }
