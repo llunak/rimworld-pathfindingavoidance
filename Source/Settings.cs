@@ -109,7 +109,11 @@ public class PathfindingAvoidanceMod : Mod
                 + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.GROWING_ZONE_COST_FRIENDLY ));
         listing.End();
         base.DoSettingsWindowContents(rect);
+    }
 
+    public override void WriteSettings()
+    {
+        base.WriteSettings();
         if( Current.Game != null && Current.Game.Maps != null )
             foreach( Map map in Current.Game.Maps )
                 map.pathFinder.MapData.Notify_MapDirtied();
