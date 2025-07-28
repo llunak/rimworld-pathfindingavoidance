@@ -22,21 +22,16 @@ namespace PathfindingAvoidance;
 //     with PathFinder.MapGridRequest used as a key, and the customizer field seems to be the only
 //     reasonable field there for a mod to make two keys different based on custom criteria.
 
-using SourceMap = System.Collections.Generic.Dictionary< ( PathType, PathFinderMapData ), PathCostSource >;
 using CustomizerMap = System.Collections.Generic.Dictionary< ( PathType, PathFinderMapData, PathRequest.IPathGridCustomizer ), Customizer >;
 
 public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
 {
     private readonly PathType pathType;
     private readonly PathRequest.IPathGridCustomizer original = null;
-    private readonly PathCostSource source = null;
     private NativeArray<ushort> grid;
-    private int sourceLastUpdateId = 0;
+    private PathCostSourceBase[] sources = null;
 
     private static CustomizerMap customizerMap = new CustomizerMap();
-    private static SourceMap sourceMap = new SourceMap();
-
-    private bool IsWrapper => original != null;
 
     public static Customizer Get( PathType pathType, PathFinderMapData mapData, PathRequest.IPathGridCustomizer original )
     {
@@ -52,57 +47,25 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
     {
         this.pathType = pathType;
         this.original = original;
-        source = sourceMap[ ( pathType, mapData ) ];
-        if( !IsWrapper )
-        {
-            // Simple case, we do not need to chain an original customizer, so just use PathCostSource data.
-            // As I understand it, NativeArray is essentially a struct containing a pointer, so assignment
-            // is cheap and shares the data pointed to. This also means we do not need the update
-            // anything if the grid in PathCostSource changes, because it's still the same buffer.
-            // PathCostSource is only disposed when map is removed, so lifetime is also fine.
-            grid = source.Cost;
-        }
-        else
-        {
-            // If there is a customizer to wrap, compute a new grid from both.
-            grid = new NativeArray<ushort>(mapData.map.cellIndices.NumGridCells, Allocator.Persistent);
-            MergeWrapperGrid();
-        }
+        grid = new NativeArray<ushort>(mapData.map.cellIndices.NumGridCells, Allocator.Persistent);
+        InitSources( mapData );
+    }
+
+    private void InitSources( PathFinderMapData mapData )
+    {
+        PathCostSourceHandler handler = PathCostSourceHandler.Get( mapData );
+        sources = handler.GetSources( pathType ).ToArray();
     }
 
     public NativeArray<ushort> GetOffsetGrid()
     {
-        // No need to update in !IsWrapper case (see above).
-        // In IsWrapper case, use LastUpdateId to detect when PathCostSource.UpdateIncrementally()
-        // updates but returns false (so only grid data changes in the array but no caching is disposed).
-        // I don't know how to detect that the original customizer has updated in such a way,
-        // but vanilla ones do not update, so that should be safe. Since this is not called _that_ often,
-        // maybe using UnsafeUtility.MemCmp() to detect a change could do, although it might be better
-        // to have some interface that provides update id (since any customizer needing this should
-        // be only another mod).
-        if( IsWrapper && sourceLastUpdateId != source.LastUpdateId )
-            MergeWrapperGrid();
+        UpdateGrid();
         return grid;
-    }
-
-    private void MergeWrapperGrid()
-    {
-        NativeArray<ushort> originalGrid = original.GetOffsetGrid();
-        NativeArray<ushort> sourceGrid = source.Cost;
-        for( int i = 0; i < grid.Count(); ++i )
-            grid[ i ] = (ushort)Math.Clamp( sourceGrid[ i ] + originalGrid[ i ], 0, 65535);
-        sourceLastUpdateId = source.LastUpdateId;
     }
 
     public void Dispose()
     {
-        if( IsWrapper )
-            grid.Dispose();
-    }
-
-    public static void AddSource( PathType pathType, PathFinderMapData mapData, PathCostSource source )
-    {
-        sourceMap[ ( pathType, mapData ) ] = source;
+        grid.Dispose();
     }
 
     public static void ClearMap( PathFinderMapData mapData )
@@ -117,13 +80,13 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
         }
     }
 
-    public static void RemoveMap( PathFinderMapData mapData )
+    private void UpdateGrid()
     {
-        ClearMap( mapData );
-        foreach( var key in sourceMap.Keys.ToArray())
+        for( int i = 0; i < grid.Length; ++i )
         {
-            if( key.Item2 == mapData )
-                sourceMap.Remove( key ); // No Dispose here(), PathFinderMapData does that.
+            grid[ i ] = 0;
+            for( int j = 0; j < sources.Count(); ++j )
+                grid[ i ] += sources[ j ].CostGrid[ i ];
         }
     }
 }

@@ -21,15 +21,16 @@ public static class PathFinderMapData_Patch
     [HarmonyPatch(new Type[] { typeof( Map ) })]
     public static void Constructor( PathFinderMapData __instance, Map map )
     {
+        PathCostSourceHandler handler = null;
         foreach( PathType pathType in Enum.GetValues( typeof( PathType )))
         {
             if( pathType.IsEnabled())
             {
-                PathCostSource source = new PathCostSource( map, pathType );
-                Customizer.AddSource( pathType, __instance, source );
-                __instance.RegisterSource( source );
+                if( handler == null )
+                    handler = PathCostSourceHandler.Get( __instance );
             }
         }
+        // TODO move all added triggers to their specific sources
         map.events.RegionsRoomsChanged += () => RegionsRoomsChanged( __instance );
     }
 
@@ -37,14 +38,14 @@ public static class PathFinderMapData_Patch
     [HarmonyPatch(nameof(Dispose))]
     public static void Dispose(PathFinderMapData __instance)
     {
-        Customizer.RemoveMap( __instance );
+        PathCostSourceHandler.RemoveMap( __instance );
     }
 
     private static void RegionsRoomsChanged( PathFinderMapData mapData )
     {
         // If a room changes, need to update costs. There is no info about cells affected,
         // so dirty the entire map if needed.
-        if( PathCostSource.IsEnabledRooms())
+        if( FriendlyRoomCostSource.IsEnabled())
             mapData.Notify_MapDirtied();
     }
 
@@ -87,7 +88,7 @@ public static class Zone_Patch
     [HarmonyPatch(nameof(AddCell))]
     public static void AddCell(Zone __instance, IntVec3 c)
     {
-        if( PathCostSource.IsEnabledZonesAny( __instance ))
+        if( ZoneCostSource.IsEnabledAny( __instance ))
             __instance.Map.pathFinder.MapData.Notify_CellDelta( c );
     }
 
@@ -95,7 +96,7 @@ public static class Zone_Patch
     [HarmonyPatch(nameof(RemoveCell))]
     public static void RemoveCell(Zone __instance, IntVec3 c)
     {
-        if( PathCostSource.IsEnabledZonesAny( __instance ))
+        if( ZoneCostSource.IsEnabledAny( __instance ))
             __instance.Map.pathFinder.MapData.Notify_CellDelta( c );
     }
 }

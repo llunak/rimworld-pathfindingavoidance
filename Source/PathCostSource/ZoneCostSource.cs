@@ -17,7 +17,7 @@ public class ZoneCostSource : PathCostSourceBase
         this.pathType = pathType;
     }
 
-    public static bool IsEnabled()
+    public static bool IsEnabled( PathType pathType )
     {
         return PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ] != 0;
     }
