@@ -14,6 +14,12 @@ public class FriendlyRoomCostSource : PathCostSourceBase
     {
     }
 
+    public static bool IsEnabled()
+    {
+        return PathfindingAvoidanceMod.settings.visitingCaravanOutdoorsRoomCost != 0
+            || PathfindingAvoidanceMod.settings.visitingCaravanIndoorRoomCost != 0;
+    }
+
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
         costGrid.Clear();

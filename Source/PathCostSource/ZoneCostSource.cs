@@ -17,6 +17,25 @@ public class ZoneCostSource : PathCostSourceBase
         this.pathType = pathType;
     }
 
+    public static bool IsEnabled()
+    {
+        return PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ] != 0;
+    }
+
+    public static bool IsEnabledAny( Zone zone )
+    {
+        if( !( zone is Zone_Growing ))
+            return false;
+        foreach( PathType pathType in Enum.GetValues( typeof( PathType )))
+        {
+            if( pathType == PathType.None )
+                continue;
+            if( PathfindingAvoidanceMod.settings.growingZoneCost[ (int)pathType ] != 0 )
+                return true;
+        }
+        return false;
+    }
+
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
         costGrid.Clear();

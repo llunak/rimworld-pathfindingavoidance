@@ -11,6 +11,11 @@ public class TerrainFilthCostSource : PathCostSourceBase
     {
     }
 
+    public static bool IsEnabled()
+    {
+        return PathfindingAvoidanceMod.settings.dirtyCost != 0;
+    }
+
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
         TerrainGrid terrainGrid = map.terrainGrid;

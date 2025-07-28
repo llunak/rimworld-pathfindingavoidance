@@ -14,6 +14,12 @@ public class DoorCostSource : PathCostSourceBase
     {
     }
 
+    public static bool IsEnabled()
+    {
+        return PathfindingAvoidanceMod.settings.sideDoorCost != 0
+            || PathfindingAvoidanceMod.settings.emergencyDoorCost != 0;
+    }
+
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
         costGrid.Clear();
