@@ -29,6 +29,11 @@ using CustomizerMap = System.Collections.Generic.Dictionary< ( PathType, PathFin
 
 public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
 {
+    // Change to other PathType to enable drawing of costs.
+    // Note that the calculation is done only on demand, so the drawing is usually delayed (happens only when
+    // next relevant pawn starts pathing somewhere).
+    private const PathType DEBUG_TYPE = PathType.None;
+
     private readonly PathType pathType;
     private readonly PathFinderMapData mapData;
     private readonly PathRequest.IPathGridCustomizer original = null;
@@ -158,6 +163,17 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
             }
         }
 #endif
+    if( pathType == DEBUG_TYPE )
+    {
+        CellIndices cellIndices = mapData.map.cellIndices;
+        mapData.map.debugDrawer.debugCells.Clear(); // FlashCell() adds unconditionally, so remove old, they'll be overwritten
+        for( int i = 0; i < grid.Length; ++i )
+        {
+            IntVec3 cell = cellIndices.IndexToCell( i );
+            // TODO use a better mapping for the cost range
+            mapData.map.debugDrawer.FlashCell( cell, grid[ i ] / 2000f, grid[ i ].ToString());
+        }
+    }
     needUpdateAll = false;
     needUpdateCells.Clear();
     }
@@ -200,6 +216,15 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
             }
         }
 #endif
+    if( pathType == DEBUG_TYPE )
+    {
+        foreach( IntVec3 cell in needUpdateCells )
+        {
+            int num = cellIndices.CellToIndex( cell );
+            mapData.map.debugDrawer.debugCells.RemoveAll( ( DebugCell c ) => c.c == cell );
+            mapData.map.debugDrawer.FlashCell( cell, grid[ num ] / 2000f, grid[ num ].ToString());
+        }
+    }
     needUpdateAll = false;
     needUpdateCells.Clear();
     }
