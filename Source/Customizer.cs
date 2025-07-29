@@ -63,9 +63,10 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
     {
         PathCostSourceHandler handler = PathCostSourceHandler.Get( mapData );
         sources = handler.GetSources( pathType ).ToArray();
+        int sourcesLength = sources.Length + ( original != null ? 1 : 0 );
         unsafe
         {
-            sourcesPtrs = (ushort**) UnsafeUtility.Malloc( sources.Length * sizeof(ushort*), sizeof(ushort*), Allocator.Persistent );
+            sourcesPtrs = (ushort**) UnsafeUtility.Malloc( sourcesLength * sizeof(ushort*), sizeof(ushort*), Allocator.Persistent );
         }
     }
 
@@ -78,6 +79,9 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
         return grid;
     }
 
+    // When any of the sources has changes in cells, this gets called (by our patch for PathFinderMapData).
+    // There's no notification for changed in the original customizer, but at least existing vanilla customizers
+    // (as of 1.6) do not change their data.
     public static void CellsNeedUpdate( PathFinderMapData mapData, HashSet< IntVec3 > updatedCells, bool updateAll )
     {
         foreach( var item in customizerMap )
@@ -127,6 +131,8 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
             int sum = 0;
             for( int j = 0; j < sources.Count(); ++j )
                 sum += sources[ j ].CostGrid[ i ];
+            if( original != null )
+                sum += original.GetOffsetGrid()[ i ];
             grid[ i ] = sum > ushort.MaxValue ? ushort.MaxValue : (ushort) sum;
         }
 #else
@@ -134,14 +140,19 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
         unsafe
         {
             ushort* gridPtr = (ushort*) NativeArrayUnsafeUtility.GetUnsafePtr( grid );
-            for( int i = 0; i < sources.Length; ++i )
+            int sourcesLength = sources.Length;
+            for( int i = 0; i < sourcesLength; ++i )
                 sourcesPtrs[ i ] = (ushort*) NativeArrayUnsafeUtility.GetUnsafePtr( sources[ i ].CostGrid );
+            if( original != null )
+            {
+                sourcesPtrs[ sourcesLength ] = (ushort*) NativeArrayUnsafeUtility.GetUnsafePtr( original.GetOffsetGrid());
+                ++sourcesLength;
+            }
             int gridLength = grid.Length;
             for( int i = 0; i < gridLength; ++i )
             {
                 int sum = 0;
-                int sourcesCount = sources.Count();
-                for( int j = 0; j < sourcesCount; ++j )
+                for( int j = 0; j < sourcesLength; ++j )
                     sum += *(sourcesPtrs[ j ]++);
                 *(gridPtr++) = sum > ushort.MaxValue ? ushort.MaxValue : (ushort) sum;
             }
@@ -161,6 +172,8 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
             int sum = 0;
             for( int j = 0; j < sources.Count(); ++j )
                 sum += sources[ j ].CostGrid[ i ];
+            if( original != null )
+                sum += original.GetOffsetGrid()[ i ];
             grid[ i ] = sum > ushort.MaxValue ? ushort.MaxValue : (ushort) sum;
         }
 #else
@@ -169,14 +182,19 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
         unsafe
         {
             ushort* gridPtr = (ushort*) NativeArrayUnsafeUtility.GetUnsafePtr( grid );
-            for( int i = 0; i < sources.Length; ++i )
+            int sourcesLength = sources.Length;
+            for( int i = 0; i < sourcesLength; ++i )
                 sourcesPtrs[ i ] = (ushort*) NativeArrayUnsafeUtility.GetUnsafePtr( sources[ i ].CostGrid );
+            if( original != null )
+            {
+                sourcesPtrs[ sourcesLength ] = (ushort*) NativeArrayUnsafeUtility.GetUnsafePtr( original.GetOffsetGrid());
+                ++sourcesLength;
+            }
             foreach( IntVec3 cell in needUpdateCells )
             {
                 int i = cellIndices.CellToIndex( cell );
                 int sum = 0;
-                int sourcesCount = sources.Count();
-                for( int j = 0; j < sourcesCount; ++j )
+                for( int j = 0; j < sourcesLength; ++j )
                     sum += sourcesPtrs[ j ][ i ];
                 gridPtr[ i ] = sum > ushort.MaxValue ? ushort.MaxValue : (ushort) sum;
             }
