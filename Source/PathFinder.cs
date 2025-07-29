@@ -49,7 +49,48 @@ public static class PathFinderMapData_Patch
             mapData.Notify_MapDirtied();
     }
 
-    private static FieldInfo pathRequestCustomizer = AccessTools.Field( typeof( PathRequest ), "customizer" );
+    // Propagate info about changed cells after updating sources.
+    [HarmonyTranspiler]
+    [HarmonyPatch(nameof(GatherData))]
+    public static IEnumerable<CodeInstruction> GatherData(IEnumerable<CodeInstruction> instructions)
+    {
+        var codes = new List<CodeInstruction>(instructions);
+        FieldInfo cellDeltas = AccessTools.Field( typeof( PathFinderMapData ), "cellDeltas" );
+        bool found = false;
+        for( int i = 0; i < codes.Count; ++i )
+        {
+            // Log.Message("T:" + i + ":" + codes[i].opcode + "::" + (codes[i].operand != null ? codes[i].operand.ToString() : codes[i].operand));
+            // The function has code:
+            // cellDeltas.Clear();
+            // After it (because the statement has a label that's jumped to), insert:
+            // GatherData_Hook(this, cellDeltaSet, lastGatherTick);
+            if( codes[ i ].opcode == OpCodes.Ldarg_0
+                && i + 2 < codes.Count
+                && codes[ i + 1 ].LoadsField( cellDeltas )
+                && codes[ i + 2 ].opcode == OpCodes.Callvirt && codes[ i + 2 ].operand.ToString() == "Void Clear()" )
+
+            {
+                codes.Insert( i + 3, new CodeInstruction( OpCodes.Ldarg_0 )); // load 'this'
+                codes.Insert( i + 4, new CodeInstruction( OpCodes.Ldarg_0 )); // for the next load
+                codes.Insert( i + 5, CodeInstruction.LoadField( typeof( PathFinderMapData ), "cellDeltaSet" )); // load 'cellDeltaSet'
+                codes.Insert( i + 6, new CodeInstruction( OpCodes.Ldarg_0 )); // for the next load
+                codes.Insert( i + 7, CodeInstruction.LoadField( typeof( PathFinderMapData ), "lastGatherTick" )); // load 'lastGatherTick'
+                codes.Insert( i + 8, new CodeInstruction( OpCodes.Call,
+                    typeof( PathFinderMapData_Patch ).GetMethod( nameof( GatherData_Hook ))));
+                found = true;
+                break;
+            }
+        }
+        if(!found)
+            Log.Error( "PathfindingAvoidance: Failed to patch PathFinderMapData.GatherData()");
+        return codes;
+    }
+
+    public static void GatherData_Hook( PathFinderMapData mapData, HashSet< IntVec3 > cellDeltasSet, int lastGatherTick )
+    {
+        // 'lastGatherTick >= 0' is not true, everything was computed
+        Customizer.CellsNeedUpdate( mapData, cellDeltasSet, !( lastGatherTick >= 0 ));
+    }
 
     // PathFinderMapData.ParameterizeGridJob() uses PathRequest.customizer instead of MapGridRequest.customizer.
     // It doesn't make a difference for vanilla, but it does not use our overriden customizer. Since conceptually
@@ -59,6 +100,7 @@ public static class PathFinderMapData_Patch
     public static IEnumerable<CodeInstruction> ParameterizeGridJob(IEnumerable<CodeInstruction> instructions)
     {
         var codes = new List<CodeInstruction>(instructions);
+        FieldInfo pathRequestCustomizer = AccessTools.Field( typeof( PathRequest ), "customizer" );
         bool found = false;
         for( int i = 0; i < codes.Count; ++i )
         {
