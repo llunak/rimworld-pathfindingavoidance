@@ -11,7 +11,8 @@ public class PathCostSourceHandler
 
     private readonly PathFinderMapData mapData;
 
-    private Dictionary< PathType, List< PathCostSourceBase >> sources = [];
+    private Dictionary< PathType, List< PathCostSourceBase >> sourcesPerType = [];
+    private List< PathCostSourceBase > allSources = [];
 
     public static PathCostSourceHandler Get( PathFinderMapData mapData )
     {
@@ -41,7 +42,7 @@ public class PathCostSourceHandler
     {
         Map map = mapData.map;
         foreach( PathType pathType in Enum.GetValues( typeof( PathType )))
-            sources[ pathType ] = [];
+            sourcesPerType[ pathType ] = [];
         if( TerrainFilthCostSource.IsEnabled())
             CreateSource( new TerrainFilthCostSource( map ), [ PathType.Colony, PathType.Friendly ] );
         if( DoorCostSource.IsEnabled())
@@ -58,11 +59,10 @@ public class PathCostSourceHandler
     {
         mapData.RegisterSource( source );
         foreach( PathType pathType in pathTypes )
-            sources[ pathType ].Add( source );
+            sourcesPerType[ pathType ].Add( source );
+        allSources.Add( source );
     }
 
-    public IEnumerable< PathCostSourceBase > GetSources( PathType pathType )
-    {
-        return sources[ pathType ];
-    }
+    public List< PathCostSourceBase > GetSources( PathType pathType ) => sourcesPerType[ pathType ];
+    public List< PathCostSourceBase > GetAllSources() => allSources;
 }

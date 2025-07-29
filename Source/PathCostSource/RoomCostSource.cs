@@ -12,6 +12,7 @@ public class FriendlyRoomCostSource : PathCostSourceBase
     public FriendlyRoomCostSource(Map map)
         : base( map )
     {
+        map.events.RegionsRoomsChanged += () => RegionsRoomsChanged();
     }
 
     public static bool IsEnabled()
@@ -35,8 +36,13 @@ public class FriendlyRoomCostSource : PathCostSourceBase
         }
     }
 
-    public override bool UpdateIncrementally(IEnumerable<PathRequest> _, List<IntVec3> cellDeltas)
+    public override bool UpdateIncrementally(IEnumerable<PathRequest> requests, List<IntVec3> cellDeltas)
     {
+        if( allChanged )
+        {
+            ComputeAll( requests );
+            return true;
+        }
         CellIndices cellIndices = map.cellIndices;
         foreach( IntVec3 cellDelta in cellDeltas )
         {
@@ -56,5 +62,15 @@ public class FriendlyRoomCostSource : PathCostSourceBase
         if( room.PsychologicallyOutdoors )
             return (ushort) PathfindingAvoidanceMod.settings.visitingCaravanOutdoorsRoomCost;
         return (ushort) PathfindingAvoidanceMod.settings.visitingCaravanIndoorRoomCost;
+    }
+
+    private void RegionsRoomsChanged()
+    {
+        // There is no info about cells affected, so dirty the entire grid.
+        // A possible way to find out the changed cells would be to prefix and postfix
+        // RegionAndRoomUpdater.CreateOrUpdateRooms() and do a diff between room cells,
+        // but that might possibly turn out to be actually more expensive in the end
+        // than updating everything.
+        allChanged = true;
     }
 }

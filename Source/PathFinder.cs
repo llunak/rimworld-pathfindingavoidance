@@ -30,8 +30,6 @@ public static class PathFinderMapData_Patch
                     handler = PathCostSourceHandler.Get( __instance );
             }
         }
-        // TODO move all added triggers to their specific sources
-        map.events.RegionsRoomsChanged += () => RegionsRoomsChanged( __instance );
     }
 
     [HarmonyPrefix]
@@ -39,14 +37,6 @@ public static class PathFinderMapData_Patch
     public static void Dispose(PathFinderMapData __instance)
     {
         PathCostSourceHandler.RemoveMap( __instance );
-    }
-
-    private static void RegionsRoomsChanged( PathFinderMapData mapData )
-    {
-        // If a room changes, need to update costs. There is no info about cells affected,
-        // so dirty the entire map if needed.
-        if( FriendlyRoomCostSource.IsEnabled())
-            mapData.Notify_MapDirtied();
     }
 
     // Propagate info about changed cells after updating sources.
@@ -88,8 +78,19 @@ public static class PathFinderMapData_Patch
 
     public static void GatherData_Hook( PathFinderMapData mapData, HashSet< IntVec3 > cellDeltasSet, int lastGatherTick )
     {
-        // 'lastGatherTick >= 0' is not true, everything was computed
-        Customizer.CellsNeedUpdate( mapData, cellDeltasSet, !( lastGatherTick >= 0 ));
+        // If 'lastGatherTick >= 0' is not true, everything was computed (and that overrides specific cells,
+        // so some checks may be skipped).
+        bool updateAll = !( lastGatherTick >= 0 );
+        PathCostSourceHandler handler = PathCostSourceHandler.Get( mapData );
+        if( !updateAll && handler.GetAllSources().Any( (PathCostSourceBase s) => s.AllChanged ))
+            updateAll = true;
+        Customizer.CellsNeedUpdate( mapData, cellDeltasSet, updateAll );
+        if( !updateAll )
+            foreach( PathCostSourceBase source in handler.GetAllSources())
+                if( source.ExtraChangedCells.Count != 0 )
+                    Customizer.CellsNeedUpdate( mapData, source.ExtraChangedCells, false );
+        foreach( PathCostSourceBase source in handler.GetAllSources())
+            source.ResetChanged();
     }
 
     // PathFinderMapData.ParameterizeGridJob() uses PathRequest.customizer instead of MapGridRequest.customizer.

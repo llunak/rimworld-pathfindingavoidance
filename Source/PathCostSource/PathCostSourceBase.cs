@@ -11,11 +11,14 @@ public abstract class PathCostSourceBase : IPathFinderDataSource, IDisposable
     protected readonly Map map;
     // The extra costs (indexed by something like 'map.cellIndices.CellToIndex( cell )').
     protected NativeArray<ushort> costGrid;
-    // Set from UpdateIncrementally(), do not include cells from cellDeltas.
+    // Set cells that need change (in additional to cells from cellDeltas).
     protected HashSet<IntVec3> extraChangedCells = [];
+    // Set if all cells changed, not necessary to call if ComputeAll() is called (by RimWorld code).
+    protected bool allChanged = false;
 
     public NativeArray<ushort> CostGrid => costGrid;
     public HashSet<IntVec3> ExtraChangedCells => extraChangedCells;
+    public bool AllChanged => allChanged;
 
     public PathCostSourceBase(Map map)
     {
@@ -29,9 +32,11 @@ public abstract class PathCostSourceBase : IPathFinderDataSource, IDisposable
         costGrid.Dispose();
     }
 
-    public void ResetExtraChangedCells()
+    // Will be called after every call to ComputeAll() or UpdateIncrementally().
+    public void ResetChanged()
     {
         extraChangedCells.Clear();
+        allChanged = false;
     }
 
     // IPathFinderDataSource:
