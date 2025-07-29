@@ -9,6 +9,7 @@ using System.Reflection.Emit;
 using System.Collections.Generic;
 using Unity.Collections;
 using LudeonTK;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace PathfindingAvoidance;
 
@@ -30,6 +31,7 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
     private readonly PathRequest.IPathGridCustomizer original = null;
     private NativeArray<ushort> grid;
     private PathCostSourceBase[] sources = null;
+    private unsafe ushort** sourcesPtrs = null; // NativeArray of pointers is apparently not possible, do it directly
 
     private static CustomizerMap customizerMap = new CustomizerMap();
 
@@ -55,6 +57,10 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
     {
         PathCostSourceHandler handler = PathCostSourceHandler.Get( mapData );
         sources = handler.GetSources( pathType ).ToArray();
+        unsafe
+        {
+            sourcesPtrs = (ushort**) UnsafeUtility.Malloc( sources.Length * sizeof(ushort*), sizeof(ushort*), Allocator.Persistent );
+        }
     }
 
     public NativeArray<ushort> GetOffsetGrid()
@@ -66,6 +72,12 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
     public void Dispose()
     {
         grid.Dispose();
+        unsafe
+        {
+            if( sourcesPtrs != null )
+                UnsafeUtility.Free( sourcesPtrs, Allocator.Persistent );
+            sourcesPtrs = null;
+        }
     }
 
     public static void ClearMap( PathFinderMapData mapData )
@@ -82,11 +94,31 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
 
     private void UpdateGrid()
     {
+#if false
         for( int i = 0; i < grid.Length; ++i )
         {
-            grid[ i ] = 0;
+            int sum = 0;
             for( int j = 0; j < sources.Count(); ++j )
-                grid[ i ] += sources[ j ].CostGrid[ i ];
+                sum += sources[ j ].CostGrid[ i ];
+            grid[ i ] = sum > ushort.MaxValue ? ushort.MaxValue : (ushort) sum;
         }
+#else
+        // This is an optimized equivalent of the above, seems to be about 4x faster.
+        unsafe
+        {
+            ushort* gridPtr = (ushort*) NativeArrayUnsafeUtility.GetUnsafePtr( grid );
+            for( int i = 0; i < sources.Length; ++i )
+                sourcesPtrs[ i ] = (ushort*) NativeArrayUnsafeUtility.GetUnsafePtr( sources[ i ].CostGrid );
+            int gridLength = grid.Length;
+            for( int i = 0; i < gridLength; ++i )
+            {
+                int sum = 0;
+                int sourcesCount = sources.Count();
+                for( int j = 0; j < sourcesCount; ++j )
+                    sum += *(sourcesPtrs[ j ]++);
+                *(gridPtr++) = sum > ushort.MaxValue ? ushort.MaxValue : (ushort) sum;
+            }
+        }
+#endif
     }
 }
