@@ -12,7 +12,6 @@ public class ZoneCostSource : PathCostSourceBase
 {
     private readonly PathType pathType;
     private static List< ZoneCostSource > sources = []; // There won't be that many maps, List is fine.
-    private List< IntVec3 > pendingCells = [];
 
     public ZoneCostSource(Map map, PathType pathType)
         : base( map )
@@ -35,7 +34,6 @@ public class ZoneCostSource : PathCostSourceBase
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
         costGrid.Clear();
-        pendingCells.Clear();
         CellIndices cellIndices = map.cellIndices;
         foreach( Zone zone in map.zoneManager.AllZones )
         {
@@ -59,13 +57,9 @@ public class ZoneCostSource : PathCostSourceBase
         };
         foreach( IntVec3 cellDelta in cellDeltas )
             updateCell( cellDelta );
-        foreach( IntVec3 cell in pendingCells )
-        {
+        foreach( IntVec3 cell in extraChangedCells )
             updateCell( cell );
-            extraChangedCells.Add( cell );
-        }
-        bool result = pendingCells.Count != 0;
-        pendingCells.Clear();
+        bool result = extraChangedCells.Count != 0;
         return result;
     }
 
@@ -82,7 +76,7 @@ public class ZoneCostSource : PathCostSourceBase
             return;
         foreach( ZoneCostSource source in sources )
             if( source.map == zone.Map )
-                source.pendingCells.Add( cell );
+                source.extraChangedCells.Add( cell );
     }
 }
 
