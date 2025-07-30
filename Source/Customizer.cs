@@ -73,6 +73,7 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
         {
             sourcesPtrs = (ushort**) UnsafeUtility.Malloc( sourcesLength * sizeof(ushort*), sizeof(ushort*), Allocator.Persistent );
         }
+        needUpdateAll = true;
     }
 
     public NativeArray<ushort> GetOffsetGrid()
