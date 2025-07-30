@@ -1,5 +1,6 @@
 using Verse;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace PathfindingAvoidance;
 
@@ -42,6 +43,7 @@ public class TerrainFilthCostSource : PathCostSourceBase
         return false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort GetTerrainCost( TerrainDef terrainDef )
     {
         if( terrainDef == null )

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using LudeonTK;
 using HarmonyLib;
+using System.Runtime.CompilerServices;
 
 namespace PathfindingAvoidance;
 
@@ -63,6 +64,7 @@ public class ZoneCostSource : PathCostSourceBase
         return result;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ushort GetZoneCost( Zone zone )
     {
         if( !( zone is Zone_Growing ))

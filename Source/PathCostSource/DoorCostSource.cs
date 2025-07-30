@@ -3,6 +3,7 @@ using Verse;
 using System;
 using System.Collections.Generic;
 using LudeonTK;
+using System.Runtime.CompilerServices;
 
 namespace PathfindingAvoidance;
 
@@ -48,6 +49,7 @@ public class DoorCostSource : PathCostSourceBase
         return false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort GetDoorCost( Building_Door door )
     {
         return DoorPriorityInfo.GetNoCreate( door ).DoorPriority switch
@@ -58,5 +60,4 @@ public class DoorCostSource : PathCostSourceBase
             _ => throw new ArgumentOutOfRangeException()
         };
     }
-
 }

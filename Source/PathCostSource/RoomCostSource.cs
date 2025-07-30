@@ -3,6 +3,7 @@ using Verse;
 using System;
 using System.Collections.Generic;
 using LudeonTK;
+using System.Runtime.CompilerServices;
 
 namespace PathfindingAvoidance;
 
@@ -53,6 +54,7 @@ public class FriendlyRoomCostSource : PathCostSourceBase
         return false;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort GetFriendlyRoomCost( Room room )
     {
         if( room == null )
