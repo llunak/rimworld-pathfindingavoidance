@@ -8,6 +8,9 @@ public class Settings : ModSettings
     public const int DIRTY_COST = 10;
     public const int SIDE_DOOR_COST = 200;
     public const int EMERGENCY_DOOR_COST = 500;
+    public const int AREA_AVOID_LOW_COST = 10;
+    public const int AREA_AVOID_MEDIUM_COST = 50;
+    public const int AREA_AVOID_HIGH_COST = 500;
     public const int VISITING_CARAVAN_OUTDOORS_ROOM_COST = 10;
     public const int VISITING_CARAVAN_INDOOR_ROOM_COST = 100;
     public const int GROWING_ZONE_COST_COLONY = 10;
@@ -16,6 +19,9 @@ public class Settings : ModSettings
     public int dirtyCost = DIRTY_COST;
     public int sideDoorCost = SIDE_DOOR_COST;
     public int emergencyDoorCost = EMERGENCY_DOOR_COST;
+    public int areaAvoidLowCost = AREA_AVOID_LOW_COST;
+    public int areaAvoidMediumCost = AREA_AVOID_MEDIUM_COST;
+    public int areaAvoidHighCost = AREA_AVOID_HIGH_COST;
     public int visitingCaravanOutdoorsRoomCost = VISITING_CARAVAN_OUTDOORS_ROOM_COST;
     public int visitingCaravanIndoorRoomCost = VISITING_CARAVAN_INDOOR_ROOM_COST;
     public int[] growingZoneCost = new int[] { 0, GROWING_ZONE_COST_COLONY, GROWING_ZONE_COST_FRIENDLY };
@@ -25,6 +31,9 @@ public class Settings : ModSettings
         Scribe_Values.Look( ref dirtyCost, "DirtyCost", DIRTY_COST );
         Scribe_Values.Look( ref sideDoorCost, "SideDoorCost", SIDE_DOOR_COST );
         Scribe_Values.Look( ref emergencyDoorCost, "EmergencyDoorCost", EMERGENCY_DOOR_COST );
+        Scribe_Values.Look( ref areaAvoidLowCost, "AreaAvoidLowCost", AREA_AVOID_LOW_COST );
+        Scribe_Values.Look( ref areaAvoidMediumCost, "AreaAvoidMediumCost", AREA_AVOID_MEDIUM_COST );
+        Scribe_Values.Look( ref areaAvoidHighCost, "AreaAvoidHighCost", AREA_AVOID_HIGH_COST );
         Scribe_Values.Look( ref visitingCaravanOutdoorsRoomCost, "VisitingCaravanOutdoorsRoomCost", VISITING_CARAVAN_OUTDOORS_ROOM_COST );
         Scribe_Values.Look( ref visitingCaravanIndoorRoomCost, "VisitingCaravanIndoorRoomCost", VISITING_CARAVAN_INDOOR_ROOM_COST );
         Scribe_Values.Look( ref growingZoneCost[ (int)PathType.Colony ], "GrowingZoneCostColony", GROWING_ZONE_COST_COLONY );
@@ -39,12 +48,18 @@ public class Settings : ModSettings
         {
             case PathType.Colony:
                 return dirtyCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0
-                    || growingZoneCost[ (int)pathType ] != 0;
+                    || growingZoneCost[ (int)pathType ] != 0
+                    || areaAvoidLowCost != 0
+                    || areaAvoidMediumCost != 0
+                    || areaAvoidHighCost != 0;
             case PathType.Friendly:
                 return dirtyCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0
                     || visitingCaravanOutdoorsRoomCost != 0
                     || visitingCaravanIndoorRoomCost != 0
-                    || growingZoneCost[ (int)pathType ] != 0;
+                    || growingZoneCost[ (int)pathType ] != 0
+                    || areaAvoidLowCost != 0
+                    || areaAvoidMediumCost != 0
+                    || areaAvoidHighCost != 0;
             case PathType.None:
             default:
                 return false;
@@ -83,6 +98,15 @@ public class PathfindingAvoidanceMod : Mod
         settings.emergencyDoorCost = (int) listing.SliderLabeled( "PathfindingAvoidance.EmergencyDoorCost".Translate( settings.emergencyDoorCost ),
             settings.emergencyDoorCost, 200, 1000, tooltip : "PathfindingAvoidance.EmergencyDoorCostTooltip".Translate()
                 + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.EMERGENCY_DOOR_COST ));
+        settings.areaAvoidLowCost = (int) listing.SliderLabeled( "PathfindingAvoidance.AreaAvoidLowCost".Translate( settings.areaAvoidLowCost ),
+            settings.areaAvoidLowCost, 0, 100, tooltip : "PathfindingAvoidance.AreaAvoidLowCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.AREA_AVOID_LOW_COST ));
+        settings.areaAvoidMediumCost = (int) listing.SliderLabeled( "PathfindingAvoidance.AreaAvoidMediumCost".Translate( settings.areaAvoidMediumCost ),
+            settings.areaAvoidMediumCost, 0, 100, tooltip : "PathfindingAvoidance.AreaAvoidMediumCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.AREA_AVOID_MEDIUM_COST ));
+        settings.areaAvoidHighCost = (int) listing.SliderLabeled( "PathfindingAvoidance.AreaAvoidHighCost".Translate( settings.areaAvoidHighCost ),
+            settings.areaAvoidHighCost, 0, 100, tooltip : "PathfindingAvoidance.AreaAvoidHighCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.AREA_AVOID_HIGH_COST ));
 
         listing.Gap();
         listing.Label( "PathfindingAvoidance.ColonyCosts".Translate(), tooltip : "PathfindingAvoidance.ColonyCostsTooltip".Translate());

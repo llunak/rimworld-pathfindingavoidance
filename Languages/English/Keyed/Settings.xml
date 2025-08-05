@@ -22,6 +22,15 @@
   <PathfindingAvoidance.EmergencyDoorCost>Extra cost for emergency door: {0}</PathfindingAvoidance.EmergencyDoorCost>
   <PathfindingAvoidance.EmergencyDoorCostTooltip>Additional perceived cost for using door that has the 'Emergency Door' priority set.</PathfindingAvoidance.EmergencyDoorCostTooltip>
 
+  <PathfindingAvoidance.AreaAvoidLowCost>Extra cost for "Path Avoid Low" area cells: {0}</PathfindingAvoidance.AreaAvoidLowCost>
+  <PathfindingAvoidance.AreaAvoidLowCostTooltip>Additional perceived cost for walking in areas marked "Path Avoid Low".</PathfindingAvoidance.AreaAvoidLowCostTooltip>
+
+  <PathfindingAvoidance.AreaAvoidMediumCost>Extra cost for "Path Avoid Medium" area cells: {0}</PathfindingAvoidance.AreaAvoidMediumCost>
+  <PathfindingAvoidance.AreaAvoidMediumCostTooltip>Additional perceived cost for walking in areas marked "Path Avoid Medium".</PathfindingAvoidance.AreaAvoidMediumCostTooltip>
+
+  <PathfindingAvoidance.AreaAvoidHighCost>Extra cost for "Path Avoid High" area cells: {0}</PathfindingAvoidance.AreaAvoidHighCost>
+  <PathfindingAvoidance.AreaAvoidHighCostTooltip>Additional perceived cost for walking in areas marked "Path Avoid High".</PathfindingAvoidance.AreaAvoidHighCostTooltip>
+
   <PathfindingAvoidance.GrowingZoneCost>Extra cost for growing zone tiles: {0}</PathfindingAvoidance.GrowingZoneCost>
   <PathfindingAvoidance.GrowingZoneCostTooltip>Additional perceived cost for walking on growing zones.</PathfindingAvoidance.GrowingZoneCostTooltip>
 
