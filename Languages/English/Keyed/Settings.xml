@@ -12,9 +12,9 @@
   <PathfindingAvoidance.FriendlyCosts>Friendly pawns costs</PathfindingAvoidance.FriendlyCosts>
   <PathfindingAvoidance.FriendlyCostsTooltip>Costs that apply to friendly pawns, such as visiting trade caravans.</PathfindingAvoidance.FriendlyCostsTooltip>
 
-  <PathfindingAvoidance.ExtraCostTooltip>The higher the number, the more pawns will try to avoid such tiles.\n\nDefault value: {0}</PathfindingAvoidance.ExtraCostTooltip>
+  <PathfindingAvoidance.ExtraCostTooltip>The higher the number, the more pawns will try to avoid such cells.\n\nDefault value: {0}</PathfindingAvoidance.ExtraCostTooltip>
 
-  <PathfindingAvoidance.DirtyCost>Extra cost for filth-producing tiles: {0}</PathfindingAvoidance.DirtyCost>
+  <PathfindingAvoidance.DirtyCost>Extra cost for filth-producing cells: {0}</PathfindingAvoidance.DirtyCost>
   <PathfindingAvoidance.DirtyCostTooltip>Additional perceived cost for using terrain that produces filth.</PathfindingAvoidance.DirtyCostTooltip>
 
   <PathfindingAvoidance.SideDoorCost>Extra cost for side door: {0}</PathfindingAvoidance.SideDoorCost>
@@ -31,12 +31,12 @@
   <PathfindingAvoidance.AreaAvoidHighCost>Extra cost for "Path Avoid High" area cells: {0}</PathfindingAvoidance.AreaAvoidHighCost>
   <PathfindingAvoidance.AreaAvoidHighCostTooltip>Additional perceived cost for walking in areas marked "Path Avoid High".</PathfindingAvoidance.AreaAvoidHighCostTooltip>
 
-  <PathfindingAvoidance.GrowingZoneCost>Extra cost for growing zone tiles: {0}</PathfindingAvoidance.GrowingZoneCost>
+  <PathfindingAvoidance.GrowingZoneCost>Extra cost for growing zone cells: {0}</PathfindingAvoidance.GrowingZoneCost>
   <PathfindingAvoidance.GrowingZoneCostTooltip>Additional perceived cost for walking on growing zones.</PathfindingAvoidance.GrowingZoneCostTooltip>
 
-  <PathfindingAvoidance.VisitingCaravanOutdoorsRoomCost>Extra cost for outdoor room tiles: {0}</PathfindingAvoidance.VisitingCaravanOutdoorsRoomCost>
+  <PathfindingAvoidance.VisitingCaravanOutdoorsRoomCost>Extra cost for outdoor room cells: {0}</PathfindingAvoidance.VisitingCaravanOutdoorsRoomCost>
   <PathfindingAvoidance.VisitingCaravanOutdoorsRoomCostTooltip>Additional perceived cost for using outdoor room.</PathfindingAvoidance.VisitingCaravanOutdoorsRoomCostTooltip>
-  <PathfindingAvoidance.VisitingCaravanIndoorRoomCost>Extra cost for indoor room tiles: {0}</PathfindingAvoidance.VisitingCaravanIndoorRoomCost>
+  <PathfindingAvoidance.VisitingCaravanIndoorRoomCost>Extra cost for indoor room cells: {0}</PathfindingAvoidance.VisitingCaravanIndoorRoomCost>
   <PathfindingAvoidance.VisitingCaravanIndoorRoomCostTooltip>Additional perceived cost for using indoor room.</PathfindingAvoidance.VisitingCaravanIndoorRoomCostTooltip>
 
 </LanguageData>
