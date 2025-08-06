@@ -13,7 +13,8 @@ public class FriendlyRoomCostSource : PathCostSourceBase
     public FriendlyRoomCostSource(Map map)
         : base( map )
     {
-        map.events.RegionsRoomsChanged += () => RegionsRoomsChanged();
+        map.events.RegionsRoomsChanged += RegionsRoomsChanged;
+        map.events.RoofChanged += RoofChanged;
     }
 
     public static bool IsEnabled()
@@ -45,13 +46,18 @@ public class FriendlyRoomCostSource : PathCostSourceBase
             return true;
         }
         CellIndices cellIndices = map.cellIndices;
-        foreach( IntVec3 cellDelta in cellDeltas )
+        var updateCell = ( IntVec3 cell ) =>
         {
-            Room room = cellDelta.GetRoom( map );
+            Room room = cell.GetRoom( map );
             ushort roomCost = GetFriendlyRoomCost( room );
-            costGrid[ cellIndices.CellToIndex( cellDelta ) ] = roomCost;
-        }
-        return false;
+            costGrid[ cellIndices.CellToIndex( cell ) ] = roomCost;
+        };
+        foreach( IntVec3 cellDelta in cellDeltas )
+            updateCell( cellDelta );
+        foreach( IntVec3 cell in extraChangedCells )
+            updateCell( cell );
+        bool result = extraChangedCells.Count != 0;
+        return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,5 +80,25 @@ public class FriendlyRoomCostSource : PathCostSourceBase
         // but that might possibly turn out to be actually more expensive in the end
         // than updating everything.
         allChanged = true;
+    }
+
+    private void RoofChanged( IntVec3 cell )
+    {
+        if( allChanged )
+            return;
+        if( !map.regionAndRoomUpdater.Enabled )
+        {
+            // There's a logged warning if room updater is disabled, do a full update if room information
+            // is not up to date.
+            allChanged = true;
+            return;
+        }
+        Room room = cell.GetRoom( map );
+        if( room == null )
+            return;
+        // If room inside a room changes, need to update all the room's cells, because
+        // that may change the cost inside of the room (PsychologicallyOutdoors).
+        foreach( IntVec3 pos in room.Cells )
+            extraChangedCells.Add( pos );
     }
 }
