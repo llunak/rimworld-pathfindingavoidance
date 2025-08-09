@@ -30,6 +30,7 @@ public class AreaCostSource : PathCostSourceBase
 
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
+        Trace.Log("Updating all cells for AreaCostSource, map: " + map);
         costGrid.Clear();
         CellIndices cellIndices = map.cellIndices;
         ( Area_Allowed areaLow, Area_Allowed areaMedium, Area_Allowed areaHigh ) = GetAreas();
@@ -55,6 +56,7 @@ public class AreaCostSource : PathCostSourceBase
             ComputeAll( requests );
             return true;
         }
+        Trace.Log("Updating " + cellDeltas.Count + "+" + extraChangedCells.Count + " cells for AreaCostSource, map: " + map);
         CellIndices cellIndices = map.cellIndices;
         ( Area_Allowed areaLow, Area_Allowed areaMedium, Area_Allowed areaHigh ) = GetAreas();
         if( areaLow == null && areaMedium == null && areaHigh == null )

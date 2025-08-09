@@ -25,6 +25,7 @@ public class FriendlyRoomCostSource : PathCostSourceBase
 
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
+        Trace.Log("Updating all cells for RoomCostSource, map: " + map);
         costGrid.Clear();
         CellIndices cellIndices = map.cellIndices;
         foreach( Room room in map.regionGrid.AllRooms )
@@ -45,6 +46,7 @@ public class FriendlyRoomCostSource : PathCostSourceBase
             ComputeAll( requests );
             return true;
         }
+        Trace.Log("Updating " + cellDeltas.Count + "+" + extraChangedCells.Count + " cells for RoomCostSource, map: " + map);
         CellIndices cellIndices = map.cellIndices;
         var updateCell = ( IntVec3 cell ) =>
         {

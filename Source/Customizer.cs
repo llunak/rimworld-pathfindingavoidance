@@ -131,6 +131,7 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
 
     private void UpdateAllCells()
     {
+        Trace.Log("Updating all cells for customizer, map: " + mapData.map + ", pathType: " + pathType);
 #if false
         for( int i = 0; i < grid.Length; ++i )
         {
@@ -181,6 +182,7 @@ public class Customizer : PathRequest.IPathGridCustomizer, IDisposable
 
     private void UpdateCells()
     {
+        Trace.Log("Updating " + needUpdateCells.Count + " cells for customizer, map: " + mapData.map + ", pathType: " + pathType);
         CellIndices cellIndices = mapData.map.cellIndices;
 #if false
         foreach( IntVec3 cell in needUpdateCells )

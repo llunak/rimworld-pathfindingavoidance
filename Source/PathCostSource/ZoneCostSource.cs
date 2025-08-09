@@ -34,6 +34,7 @@ public class ZoneCostSource : PathCostSourceBase
 
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
+        Trace.Log("Updating all cells for ZoneCostSource, map: " + map);
         costGrid.Clear();
         CellIndices cellIndices = map.cellIndices;
         foreach( Zone zone in map.zoneManager.AllZones )
@@ -48,6 +49,7 @@ public class ZoneCostSource : PathCostSourceBase
 
     public override bool UpdateIncrementally(IEnumerable<PathRequest> _, List<IntVec3> cellDeltas)
     {
+        Trace.Log("Updating " + cellDeltas.Count + "+" + extraChangedCells.Count + " cells for ZoneCostSource, map: " + map);
         CellIndices cellIndices = map.cellIndices;
         var updateCell = ( IntVec3 cell ) =>
         {

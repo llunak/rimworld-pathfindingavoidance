@@ -41,6 +41,7 @@ public class PathCostSourceHandler
     public void CreateSources()
     {
         Map map = mapData.map;
+        Trace.Log("Setting up sources for map: " + map);
         foreach( PathType pathType in Enum.GetValues( typeof( PathType )))
             sourcesPerType[ pathType ] = [];
         if( TerrainFilthCostSource.IsEnabled())

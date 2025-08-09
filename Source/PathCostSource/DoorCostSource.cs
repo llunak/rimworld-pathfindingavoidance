@@ -23,6 +23,7 @@ public class DoorCostSource : PathCostSourceBase
 
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
+        Trace.Log("Updating all cells for DoorCostSource, map: " + map);
         costGrid.Clear();
         CellIndices cellIndices = map.cellIndices;
         foreach( Building_Door door in map.listerBuildings.AllBuildingsColonistOfClass< Building_Door >())
@@ -36,6 +37,7 @@ public class DoorCostSource : PathCostSourceBase
 
     public override bool UpdateIncrementally(IEnumerable<PathRequest> _, List<IntVec3> cellDeltas)
     {
+        Trace.Log("Updating " + cellDeltas.Count + "+" + extraChangedCells.Count + " cells for DoorCostSource, map: " + map);
         CellIndices cellIndices = map.cellIndices;
         Building[] buildingArray = map.edificeGrid.InnerArray;
         foreach( IntVec3 cellDelta in cellDeltas )

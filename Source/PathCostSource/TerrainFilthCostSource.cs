@@ -19,6 +19,7 @@ public class TerrainFilthCostSource : PathCostSourceBase
 
     public override void ComputeAll(IEnumerable<PathRequest> _)
     {
+        Trace.Log("Updating all cells for TerrainFilthCostSource, map: " + map);
         TerrainGrid terrainGrid = map.terrainGrid;
         for( int i = 0; i < map.cellIndices.NumGridCells; ++i )
         {
@@ -32,6 +33,7 @@ public class TerrainFilthCostSource : PathCostSourceBase
 
     public override bool UpdateIncrementally(IEnumerable<PathRequest> _, List<IntVec3> cellDeltas)
     {
+        Trace.Log("Updating " + cellDeltas.Count + "+" + extraChangedCells.Count + " cells for TerrainFilthCostSource, map: " + map);
         CellIndices cellIndices = map.cellIndices;
         TerrainGrid terrainGrid = map.terrainGrid;
         foreach( IntVec3 cellDelta in cellDeltas )

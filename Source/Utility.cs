@@ -2,6 +2,7 @@ using HarmonyLib;
 using Verse;
 using System;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace PathfindingAvoidance;
 
@@ -32,4 +33,10 @@ public class Utility
     {
         return bpcOnAlertDelegate != null ? bpcOnAlertDelegate() : false;
     }
+}
+
+public static class Trace
+{
+    [Conditional("TRACE")]
+    public static void Log(string message) => Verse.Log.Message("Pathfinding Avoidance Trace: " + message);
 }
