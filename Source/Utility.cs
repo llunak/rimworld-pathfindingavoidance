@@ -37,6 +37,6 @@ public class Utility
 
 public static class Trace
 {
-    [Conditional("TRACE")]
+    [Conditional("TRACE_UPDATE")]
     public static void Log(string message) => Verse.Log.Message("Pathfinding Avoidance Trace: " + message);
 }
