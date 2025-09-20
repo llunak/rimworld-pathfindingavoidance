@@ -46,6 +46,8 @@ public class PathCostSourceHandler
             sourcesPerType[ pathType ] = [];
         if( TerrainFilthCostSource.IsEnabled())
             CreateSource( new TerrainFilthCostSource( map ), [ PathType.Colony, PathType.Friendly ] );
+        if( WeatherCostSource.IsEnabled())
+            CreateSource( new WeatherCostSource( map ), [ PathType.Colony, PathType.Friendly ] );
         if( DoorCostSource.IsEnabled())
             CreateSource( new DoorCostSource( map ), [ PathType.Colony, PathType.Friendly ] );
         if( AreaCostSource.IsEnabled())

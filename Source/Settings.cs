@@ -6,6 +6,7 @@ namespace PathfindingAvoidance;
 public class Settings : ModSettings
 {
     public const int DIRTY_COST = 10;
+    public const int WEATHER_COST = 20;
     public const int SIDE_DOOR_COST = 200;
     public const int EMERGENCY_DOOR_COST = 500;
     public const int AREA_AVOID_LOW_COST = 10;
@@ -17,6 +18,7 @@ public class Settings : ModSettings
     public const int GROWING_ZONE_COST_FRIENDLY = 10;
 
     public int dirtyCost = DIRTY_COST;
+    public int weatherCost = WEATHER_COST;
     public int sideDoorCost = SIDE_DOOR_COST;
     public int emergencyDoorCost = EMERGENCY_DOOR_COST;
     public int areaAvoidLowCost = AREA_AVOID_LOW_COST;
@@ -29,6 +31,7 @@ public class Settings : ModSettings
     public override void ExposeData()
     {
         Scribe_Values.Look( ref dirtyCost, "DirtyCost", DIRTY_COST );
+        Scribe_Values.Look( ref weatherCost, "WeatherCost", WEATHER_COST );
         Scribe_Values.Look( ref sideDoorCost, "SideDoorCost", SIDE_DOOR_COST );
         Scribe_Values.Look( ref emergencyDoorCost, "EmergencyDoorCost", EMERGENCY_DOOR_COST );
         Scribe_Values.Look( ref areaAvoidLowCost, "AreaAvoidLowCost", AREA_AVOID_LOW_COST );
@@ -47,13 +50,13 @@ public class Settings : ModSettings
         switch( pathType )
         {
             case PathType.Colony:
-                return dirtyCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0
+                return dirtyCost != 0 || weatherCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0
                     || growingZoneCost[ (int)pathType ] != 0
                     || areaAvoidLowCost != 0
                     || areaAvoidMediumCost != 0
                     || areaAvoidHighCost != 0;
             case PathType.Friendly:
-                return dirtyCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0
+                return dirtyCost != 0 || weatherCost != 0 || sideDoorCost != 0 || emergencyDoorCost != 0
                     || visitingCaravanOutdoorsRoomCost != 0
                     || visitingCaravanIndoorRoomCost != 0
                     || growingZoneCost[ (int)pathType ] != 0
@@ -92,6 +95,9 @@ public class PathfindingAvoidanceMod : Mod
         settings.dirtyCost = (int) listing.SliderLabeled( "PathfindingAvoidance.DirtyCost".Translate( settings.dirtyCost ),
             settings.dirtyCost, 0, 100, tooltip : "PathfindingAvoidance.DirtyCostTooltip".Translate()
                 + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.DIRTY_COST ));
+        settings.weatherCost = (int) listing.SliderLabeled( "PathfindingAvoidance.WeatherCost".Translate( settings.weatherCost ),
+            settings.weatherCost, 0, 100, tooltip : "PathfindingAvoidance.WeatherCostTooltip".Translate()
+                + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.WEATHER_COST ));
         settings.sideDoorCost = (int) listing.SliderLabeled( "PathfindingAvoidance.SideDoorCost".Translate( settings.sideDoorCost ),
             settings.sideDoorCost, 50, 500, tooltip : "PathfindingAvoidance.SideDoorCostTooltip".Translate()
                 + "\n\n" + "PathfindingAvoidance.ExtraCostTooltip".Translate( Settings.SIDE_DOOR_COST ));

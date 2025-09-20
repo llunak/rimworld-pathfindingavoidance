@@ -17,6 +17,9 @@
   <PathfindingAvoidance.DirtyCost>Extra cost for filth-producing cells: {0}</PathfindingAvoidance.DirtyCost>
   <PathfindingAvoidance.DirtyCostTooltip>Additional perceived cost for using terrain that produces filth.</PathfindingAvoidance.DirtyCostTooltip>
 
+  <PathfindingAvoidance.WeatherCost>Extra cost for cells with bad weather: {0}</PathfindingAvoidance.WeatherCost>
+  <PathfindingAvoidance.WeatherCostTooltip>Additional perceived cost for using unroofed cells during bad weather.</PathfindingAvoidance.WeatherCostTooltip>
+
   <PathfindingAvoidance.SideDoorCost>Extra cost for side door: {0}</PathfindingAvoidance.SideDoorCost>
   <PathfindingAvoidance.SideDoorCostTooltip>Additional perceived cost for using door that has the 'Side Door' priority set.</PathfindingAvoidance.SideDoorCostTooltip>
   <PathfindingAvoidance.EmergencyDoorCost>Extra cost for emergency door: {0}</PathfindingAvoidance.EmergencyDoorCost>
